@@ -114,3 +114,8 @@ $RECYCLE.BIN/
 
 # Windows shortcuts
 *.lnk
+
+# Projects
+
+Makefile.coq
+Makefile.coq.conf
