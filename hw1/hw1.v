@@ -76,13 +76,18 @@ Import PeanoNat.Nat.
 (* Our ISA has three registers: [ax], [cx], and [dx]. Define an
    algebraic data type for three registers. *)
 
-Inductive Register : Type :=   (* FILL IN HERE *).
+Inductive Register : Type :=
+  | ax
+  | cx
+  | dx.
 
 (** **** Exercise: 1 star (Register) *)
 (* The instructions of our ISA have two flavors of operands: registers
    and constants (aka immediate values).  Define an ADT representing
    both. *)
-Inductive Operand : Type :=   (* FILL IN HERE *).
+Inductive Operand : Type :=
+  | register (r : Register)
+  | immediate (i : nat).
 
 
 (** **** Exercise: 1 star (MachineState) *)
@@ -90,38 +95,57 @@ Inductive Operand : Type :=   (* FILL IN HERE *).
    register (modelled as natural numbers), and the value of a
    condition code (modelled as a boolean flag). Define an ADT
    representing these machine states. *)
-Inductive MachineState : Type :=   (* FILL IN HERE *).
-
+Inductive MachineState : Type :=
+  | state (ax cx dx : nat) (condition : bool).
 
 (** **** Exercise: 1 star (getReg, setReg, getFlag, setFlag) *)
 (* Define getter and setter functions for the registers an the
    condition code. *)
-Definition getReg (r : Register) (st : MachineState) : nat
-  (* REPLACE THIS LINE WITH ":= _your_definition_ ." *) . Admitted.
+Definition getReg (r : Register) (st : MachineState) : nat :=
+  match r, st with
+  | ax, state a _ _ _ => a
+  | cx, state _ c _ _ => c
+  | dx, state _ _ d _ => d
+  end.
 
-Definition setReg (r : Register) (n : nat) (st : MachineState) : MachineState
-(* REPLACE THIS LINE WITH ":= _your_definition_ ." *) . Admitted.
+Definition setReg (r : Register) (n : nat) (st : MachineState) : MachineState :=
+  match r, st with
+  | ax, state _ c d condition => state n c d condition
+  | cx, state a _ d condition => state a n d condition
+  | dx, state a c _ condition => state a c n condition
+  end.
 
-Definition getFlag (st : MachineState) : bool
-(* REPLACE THIS LINE WITH ":= _your_definition_ ." *) . Admitted.
+Definition getFlag (st : MachineState) : bool :=
+  match st with
+  | state _ _ _ condition => condition
+  end.
 
-Definition setFlag (b : bool) (st : MachineState) : MachineState
-(* REPLACE THIS LINE WITH ":= _your_definition_ ." *) . Admitted.
+Definition setFlag (b : bool) (st : MachineState) : MachineState :=
+  match st with
+  | state a c d _ => state a c d b
+  end.
 
 (** **** Exercise: 1 star (Instr) *)
 (* At long last, we can now define a datatype representing the
-   instructions of our ISA. The informal specifications of these instructions are:
+   instructions of our ISA. The informal specifications of these instructions
+   are:
 
    Instruction |                 Description
    =============================================================================
    inc  R      | Increment the value of register R by 1
-   add  O R    | Add source operand O to destination register R (i.e. add O to the value in R)
+   add  O R    | Add source operand O to destination register R (i.e. add O to
+               | the value in R)
    cmp  O1 O2  | Set the condition code to reflect whether O1 equals O2
-   cset O R    | Store the value of operand O in register R if the condition code is true, do nothing otherwise.
+   cset O R    | Store the value of operand O in register R if the condition
+               | code is true, do nothing otherwise.
 
  Define a datatype for this set of instructions. *)
 
-Inductive Instr : Type :=   (* FILL IN HERE *).
+Inductive Instr : Type :=
+  | inc (r : Register)
+  | add (o : Operand) (r : Register)
+  | cmp (o1 o2 : Operand)
+  | cset (o : Operand) (r : Register).
 
 
 (** **** Exercise: 2 star (evalInstr) *)
@@ -130,8 +154,30 @@ Inductive Instr : Type :=   (* FILL IN HERE *).
    them an interpretation.  Using the informal specifications from the
    previous exercise, define an evaluation function for single
    instructions. *)
-Definition evalInstr (i : Instr) (st : MachineState) : MachineState
-(* REPLACE THIS LINE WITH ":= _your_definition_ ." *) . Admitted.
+Definition evalInstr (i : Instr) (st : MachineState) : MachineState :=
+  match i with
+  | inc r => setReg r (getReg r st + 1) st
+  | add o r => match o with
+               | register r' => setReg r (getReg r st + getReg r' st) st
+               | immediate i => setReg r (getReg r st + i) st
+               end
+  | cmp o1 o2 => match o1, o2 with
+                 | register r1, register r2 =>
+                   setFlag ((getReg r1 st) =? (getReg r2 st)) st
+                 | register r1, immediate i2 =>
+                   setFlag (getReg r1 st =? i2) st
+                 | immediate i1, register r2 =>
+                   setFlag (i1 =? getReg r2 st) st
+                 | immediate i1, immediate i2 =>
+                   setFlag (i1 =? i2) st
+                 end
+  | cset o r => if getFlag st then
+                  match o with
+                  | register r' => setReg r (getReg r' st) st
+                  | immediate i => setReg r i st
+                  end
+                else st
+  end.
 
 (* ================================================================= *)
 (* Proof by case analysis: *)
@@ -148,38 +194,37 @@ The following two theorems ([Demorgan1] and [Demorgan2] prove that
 these laws hold for the definitions of boolean, logical and, and logic
 or from Coq's standard library. *)
 (** **** Exercise: 1 star (Demorgan1) *)
-Theorem Demorgan1 : forall (a b : bool), negb (andb a b) = orb (negb a) (negb b).
+Theorem Demorgan1 : forall (a b : bool),
+  negb (andb a b) = orb (negb a) (negb b).
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  intros []; reflexivity.
+Qed.
 
 
 (** **** Exercise: 1 star (Demorgan2) *)
-Theorem Demorgan2 : forall (a b : bool), negb (orb a b) = andb (negb a) (negb b).
+Theorem Demorgan2 : forall (a b : bool),
+  negb (orb a b) = andb (negb a) (negb b).
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  intros []; reflexivity.
+Qed.
 
 (* ================================================================= *)
 (* One way to validate that your implementation of [evalInstr] is
    correct is to prove that it satisfies some equations implied by the
    informal description of evaluation. One of the advantages of using
    Coq is that we can use it to prove that a function is correct for a
-   mixture of specific
-
-*)
+   mixture of specific *)
 
 (** **** Exercise: 1 star (evalFlagID) *)
 (* Prove evaluation of the add instruction leaves the conditional flag
    unchanged for every possible combination of operands and initial
    states. *)
-Theorem evalAddFlagID : forall (src : Operand) (dest : Register) (st : MachineState),
-(* REPLACE THIS LINE WITH "getFlag (evalInstr (add src cx) st) = getFlag st." ONCE YOU HAVE COMPLETED THE [Register] EXERCISE.   *) True.
-(* YOU MAY HAVE TO ADJUST THE REGISTER NAMES IN THE THEOREM STATEMENT
-TO REFLECT YOUR DEFINITION OF [Register]. *)
+Theorem evalAddFlagID :
+  forall (src : Operand) (dest : Register) (st : MachineState),
+  getFlag (evalInstr (add src cx) st) = getFlag st.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  intros [] _ []; reflexivity.
+Qed.
 
 
 (* ================================================================= *)
@@ -190,26 +235,30 @@ Admitted.
 
 (** **** Exercise: 1 star (evalFlagID) *)
 (* Prove that [evalInstr] leaves a non-destination register unchanged. *)
-Theorem evalCsetOK : forall (src : Operand) (dest : Register) (st : MachineState),
+Theorem evalCsetOK :
+  forall (src : Operand) (dest : Register) (st : MachineState),
     getFlag st = false ->
-    (* REPLACE THIS LINE WITH "evalInstr (cset src dest) st = st." ONCE YOU HAVE COMPLETED THE [Instr] EXERCISE *) True.
-(* YOU MAY HAVE TO ADJUST THE INSTRUCTION NAMES IN THE THEOREM STATEMENT
-TO REFLECT YOUR DEFINITION OF [Instr]. *)
+    evalInstr (cset src dest) st = st.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  intros [] dest st H;
+  simpl;
+  rewrite H;
+  reflexivity.
+Qed.
 
 
 (** **** Exercise: 1 star (evalAddComm) *)
 (* Prove that [evalInstr] is commutative. The theorem [add_comm]
    should prove useful in this proof. *)
 Theorem evalAddComm : forall (src dest : Register) (st : MachineState),
-        (* REPLACE THIS LINE WITH "getReg dest (evalInstr (add (reg src) dest) st) = getReg src (evalInstr (add (reg dest) src) st). " ONCE YOU HAVE COMPLETED THE [Instr] EXERCISE *) True.
+  getReg dest (evalInstr (add (register src) dest) st)
+    = getReg src (evalInstr (add (register dest) src) st). 
 Proof.
-(* YOU MAY HAVE TO ADJUST THE INSTRUCTION NAMES IN THE THEOREM STATEMENT
-TO REFLECT YOUR DEFINITION OF [Instr] and [Operand]. *)
-  (* FILL IN HERE *)
-Admitted.
+  intros [] [] [];
+  simpl;
+  try rewrite add_comm;
+  reflexivity.
+Qed.
 
 (* ================================================================= *)
 (* Inductive Datatypes: *)
@@ -218,52 +267,61 @@ Admitted.
 (* An assembly program is a sequence of instructions. That is, it is
    either the empty program, or an instruction sequenced with another
    program. Define an inductive datatype for assembly programs. *)
-Inductive AsmProg : Type := (* FILL IN HERE*).
+Inductive AsmProg : Type :=
+  | nil
+  | instructions (i : Instr) (p : AsmProg).
 
 
 (** **** Exercise: 1 star (evalAsm) *)
 (* Using [evalInstr], define an evaluation function for assembly
    programs. *)
-Fixpoint evalAsm (p : AsmProg) (st : MachineState) : MachineState
-(* REPLACE THIS LINE WITH ":= _your_definition_ ." *) . Admitted.
+Fixpoint evalAsm (p : AsmProg) (st : MachineState) : MachineState :=
+  match p with
+  | nil => st
+  | instructions i p => evalInstr i (evalAsm p st)
+  end.
 
 
 (** **** Exercise: 1 star (asmSwapAC) *)
 (* A program is a value of type [AsmProg]. Define a program that swaps
 the ax and cx registers (it's okay if the dx register) is modified in
 the process.  *)
-Definition asmSwapAC : AsmProg
-  (* REPLACE THIS LINE WITH ":= _your_definition_ ." *) . Admitted.
+Definition asmSwapAC : AsmProg :=
+  instructions (cset (register dx) (cx)) (
+  instructions (cset (register cx) (ax)) (
+  instructions (cset (register ax) (dx)) (
+  instructions (cmp (immediate 0) (immediate 0)) nil
+  ))).
 
 
 (** **** Exercise: 1 star (asmSwapACOK) *)
 (* Prove that [asmSwap] progam from the previous exercise correctly
    stores the value of the [cx] register in the [ax] register. *)
 Theorem asmSwapACOK : forall (st : MachineState),
-    (* REPLACE THIS LINE WITH "getReg ax (evalAsm asmSwapAC st) = getReg cx st." ONCE YOU HAVE COMPLETED THE [Register] EXERCISE *) True.
-(* YOU MAY HAVE TO ADJUST THE REGISTER NAMES IN THE THEOREM STATEMENT
-TO REFLECT YOUR DEFINITION OF [Register]. *)
+  getReg ax (evalAsm asmSwapAC st) = getReg cx st.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  intros []; reflexivity.
+Qed.
 
 
 (** **** Exercise: 1 star (asmSwapACOK') *)
 (* Prove that [asmSwap] progam from the previous exercise correctly
    stores the value of the [ax] register in the [cx] register. *)
 Theorem asmSwapACOK' : forall (st : MachineState),
-    (* REPLACE THIS LINE WITH "getReg cx (evalAsm asmSwapAC st) = getReg ax st." ONCE YOU HAVE COMPLETED THE [Register] EXERCISE *) True.
-(* YOU MAY HAVE TO ADJUST THE REGISTER NAMES IN THE THEOREM STATEMENT
-TO REFLECT YOUR DEFINITION OF [Register]. *)
+  getReg cx (evalAsm asmSwapAC st) = getReg ax st.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  intros []; reflexivity.
+Qed.
 
 
 (** **** Exercise: 1 star (asmTripleAx) *)
 (* Write a program that triples the value in the [ax] register. *)
-Definition asmTripleAx : AsmProg
-(* REPLACE THIS LINE WITH ":= _your_definition_ ." *) . Admitted.
+Definition asmTripleAx : AsmProg :=
+  instructions (add (register cx) ax) (
+  instructions (add (register cx) ax) (
+  instructions (cset (register ax) cx) (
+  instructions (cmp (immediate 0) (immediate 0)) nil
+  ))).
 
 (** **** Exercise: 2 star (asmTripleAxOK) *)
 (* Formalize the claim that "For every starting state, evaluating
@@ -272,8 +330,12 @@ Definition asmTripleAx : AsmProg
    prove that your theorem is correct.
 
    Hint: the [plus_n_O] fact might be useful in your proof. *)
-Theorem asmTripleAxOK :
-(* REPLACE THIS LINE WITH "_your definition_ ." ONCE YOU HAVE COMPLETED THE PREVIOUS EXERCISES *) True.
+Theorem asmTripleAxOK : forall (st: MachineState),
+  3 * getReg ax st = getReg ax (evalAsm asmTripleAx st).
 Proof.
-  (* FILL IN HERE*)
-Admitted.
+  intros [];
+  simpl;
+  rewrite <- plus_n_O;
+  rewrite -> add_assoc;
+  reflexivity.
+Qed.
