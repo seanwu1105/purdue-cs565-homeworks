@@ -52,9 +52,9 @@ Goal True.
 
   exc "apply_Q".
   pt 1.
-  check_type @apply_Q (((forall n, evenb n = true -> oddb (S n) = true) ->
-                        evenb 4 = true ->
-                        oddb 3 = true)).
+  check_type @apply_Q (((forall n, even n = true -> odd (S n) = true) ->
+                        even 4 = true ->
+                        odd 3 = true)).
   Print Assumptions apply_Q.
   nl.
 

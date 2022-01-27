@@ -120,4 +120,7 @@ $RECYCLE.BIN/
 Makefile.coq
 Makefile.coq.conf
 
+lf/
+lf.tgz
+
 try/

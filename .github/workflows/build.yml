@@ -14,5 +14,21 @@ jobs:
       - name: Setup Coq
         run: sudo snap install coq-prover
 
-      - name: Make
+      - name: Test assignment
+        run: make
+
+  hw2:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Setup Coq
+        run: sudo snap install coq-prover
+
+      - name: Compile LF
+        run: ./build-lf.sh
+
+      - name: Test assignment
+        working-directory: ./hw2
         run: make

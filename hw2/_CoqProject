@@ -1,4 +1,4 @@
 -R . Top
--R lf LF
+-R ../lf LF
 hw2.v
 hw2_test.v

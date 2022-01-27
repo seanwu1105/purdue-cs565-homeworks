@@ -70,7 +70,6 @@
     different names.  This is fine: The most recent submission is the
     one that will be graded. *)
 
-Set Warnings "-notation-overridden,-parsing".
 (** The [Require Export] statement on the next line tells Coq to use
     the [Nat] and PeanoNat modules from the standard library.  *)
 From LF Require Export Logic.
@@ -119,8 +118,9 @@ Fixpoint EnumerateStudents (db : StudentsTree) : list Student :=
    student of a certain age: *)
 Fixpoint FindStudent (age : nat) (db : StudentsTree) :=
   match db with
-  | node age' records lt rt => if (age =? age') then records else
-                                 if (age <=? age') then FindStudent age lt else FindStudent age rt
+  | node age' records lt rt => if (age =? age') then records
+                               else if (age <=? age') then FindStudent age lt
+                               else FindStudent age rt
   | empty => [ ]
   end.
 
@@ -157,49 +157,67 @@ Compute (EnumerateStudents exampleDB).
 (** **** Exercise: 1 point (SearchTree) *)
 (* Define a search tree that is polymorphic over the type of its
    search keys and elements: *)
-Inductive SearchTree (* REPLACE THIS LINE WITH ANY TYPE PARAMETERS *) : Type := (* FILL IN HERE *).
+Inductive SearchTree (K V : Type) : Type :=
+| entry (key : K) (records : list V) (lt rt : SearchTree K V)
+| EmptyTree.
+
+Arguments entry {_ _}.
+Arguments EmptyTree {_ _}.
 
 (** **** Exercise: 1 point (EnumerateRecords) *)
 (* Define a polymorphic function that returns all the elements in a
    database: *)
-Fixpoint EnumerateRecords
-         (* REPLACE THIS LINE WITH THE PARAMETERS AND RETURN TYPE OF YOUR FUNCTION *) (db : SearchTree) : unit.
-(* REPLACE THIS LINE WITH ":= _your_definition_ ." *) Admitted.
+Fixpoint EnumerateRecords {K V : Type} (db : SearchTree K V) : list V :=
+  match db with
+  | entry _ records lt rt =>
+    records ++ (EnumerateRecords lt) ++ (EnumerateRecords rt)
+  | EmptyTree => [ ]
+  end.
 
 (** **** Exercise: 1 point (FindKey) *)
 (* Define a polymorphic higher-order variant of [FindPerson] that
    takes equality and comparision functions as arguments and uses
    them to find all the elements in a database matching a given key:
    *)
-Fixpoint FindKey
-         (* REPLACE THIS LINE WITH THE PARAMETERS AND RETURN TYPE OF YOUR FUNCTION *) (db : SearchTree) : unit.
-(* REPLACE THIS LINE WITH ":= _your_definition_ ." *) Admitted.
+Fixpoint FindKey {K V : Type}
+  (eqb : K -> K -> bool) (leb : K -> K -> bool)
+  (key : K) (db : SearchTree K V) : list V :=
+  match db with
+  | entry k records lt rt => if (eqb key k) then records
+                             else if (leb key k) then FindKey eqb leb key lt
+                             else FindKey eqb leb key rt
+  | EmptyTree => [ ]
+  end.
 
 (** **** Exercise: 1 point (AddElement) *)
 (* Define a polymorphic higher-order variant of [AddElement] that
    takes equality, comparision, and a projection function from a
    record to its key as arguments and uses them to insert a new
    element into the database: *)
-Fixpoint AddElement
-         (* REPLACE THIS LINE WITH THE PARAMETERS AND RETURN TYPE OF YOUR FUNCTION *) (db : SearchTree) : unit.
-(* REPLACE THIS LINE WITH ":= _your_definition_ ." *) Admitted.
+Fixpoint AddElement {K V : Type}
+  (eqb : K -> K -> bool) (leb : K -> K -> bool) (proj : V -> K)
+  (rec : V) (db : SearchTree K V) :
+    SearchTree K V :=
+  match db with
+  | entry k records lt rt => if (eqb (proj rec) k) then
+                               entry k (rec :: records) lt rt
+                             else if (leb (proj rec) k) then
+                               entry k records (AddElement eqb leb proj rec lt) rt
+                             else
+                               entry k records lt (AddElement eqb leb proj rec rt)
+  | EmptyTree => entry (proj rec) [ rec ] EmptyTree EmptyTree
+  end.
 
 (* Prefixing the function definitions below with an @ symbol forces their
    implicit arguments to be treated as explicit. Learn more in the
    'Supplying Type Arguments Explicitly' section in Poly.v.
 
    We can 'recover' our original database by specializing these polymorphic versions: *)
-Definition EnumerateStudents' :=
-(* REPLACE THIS LINE WITH "@EnumerateRecords nat Student." AFTER FINISHING THE PREVIOUS EXERCISES *) fun (_ : unit) => [] : list Student.
-Definition FindStudent' :=
-(* REPLACE THIS LINE WITH "@FindKey nat Student eqb leb." AFTER FINISHING THE PREVIOUS EXERCISES *) fun (_ : nat) (_ : unit) => [] : list Student.
-Definition AddStudent' :=
-(* REPLACE THIS LINE WITH "@AddElement nat Student eqb leb getAge." AFTER FINISHING THE PREVIOUS EXERCISES *) fun (_ : Student) (_ : unit) => tt.
+Definition EnumerateStudents' := @EnumerateRecords nat Student.
+Definition FindStudent' := @FindKey nat Student eqb leb.
+Definition AddStudent' := @AddElement nat Student eqb leb getAge.
 
-Definition exampleDB' :=
-(* REPLACE THIS LINE WITH "AddStudent' Alice (AddStudent' Bob (AddStudent' Carl (AddStudent' Donna EmptyTree)))." AFTER FINISHING THE PREVIOUS EXERCISES *) tt.
-(* YOU MAY HAVE TO ADJUST THE NAME 'EmptyTree' IN THE DEFINITION
-TO REFLECT YOUR DEFINITION OF [SearchTree]. *)
+Definition exampleDB' := AddStudent' Alice (AddStudent' Bob (AddStudent' Carl (AddStudent' Donna EmptyTree))).
 
 (** **** Exercise: 1 point (sanity_check) *)
 (* You can validate your generalized definitions by testing that these
@@ -208,28 +226,28 @@ TO REFLECT YOUR DEFINITION OF [SearchTree]. *)
 (* You should be able to complete the following proofs using only [reflexivity]. *)
 Example Find_21_OK : FindStudent' 21 exampleDB' = FindStudent 21 exampleDB.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  reflexivity.
+Qed.
 
 Example Find_22_OK : FindStudent' 22 exampleDB'  = FindStudent 22 exampleDB.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  reflexivity.
+Qed.
 
 Example Find_23_OK : FindStudent' 23 exampleDB'  = FindStudent 23 exampleDB.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  reflexivity.
+Qed.
 
 Example Find_24_OK : FindStudent' 24 exampleDB'  = FindStudent 24 exampleDB.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  reflexivity.
+Qed.
 
 Example Enumerate_OK : EnumerateStudents' exampleDB' = EnumerateStudents exampleDB.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  reflexivity.
+Qed.
 
 (* ================================================================= *)
 (* Basic Tactics *)
@@ -240,12 +258,13 @@ Admitted.
 (** **** Exercise: 1 point (apply_Q) *)
 (** Complete the following proof using only [intros] and [apply]. *)
 Theorem apply_Q :
-     (forall n, evenb n = true -> oddb (S n) = true) ->
-     evenb 4 = true ->
-     oddb 3 = true.
+     (forall n, even n = true -> odd (S n) = true) ->
+     even 4 = true ->
+     odd 3 = true.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  intros _ H.
+  apply H.
+Qed.
 
 (** **** Exercise: 1 point (injection_Q) *)
 (** Complete the following proof using only [intros], [injection], [rewrite], and [reflexivity]. *)
@@ -254,8 +273,13 @@ Theorem injection_Q : forall (X : Type) (x y z w : X) (l j : list X),
     x :: l = z :: [ ] ->
     x = y.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  intros X x y z w l j H0 H1.
+  injection H0 as _ eq1 _.
+  injection H1 as eq2 _.
+  rewrite eq1.
+  rewrite eq2.
+  reflexivity.
+Qed.
 
 (** **** Exercise: 1 point (discriminate_Q) *)
 (** Complete the following proof using only [intros] and [discriminate]. *)
@@ -264,8 +288,9 @@ Theorem discriminate_Q :
     x :: y :: l = [] ->
     x = z.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  intros.
+  discriminate H.
+Qed.
 
 (* ================================================================= *)
 (* Proof by Induction: *)
@@ -293,15 +318,19 @@ Module NatGymnasium.
   Theorem plus_n_Sm : forall n m : nat,
       S (plus n m) = plus n (S m).
   Proof.
-  (* FILL IN HERE *)
-  Admitted.
+    induction n as [| n' IHn'].
+    - reflexivity.
+    - simpl. intros m. rewrite IHn'. reflexivity.
+  Qed.
 
   (** **** Exercise: 1 point (plus_assoc) *)
   Theorem plus_assoc : forall n m p : nat,
       plus n (plus m p) = plus (plus n m) p.
   Proof.
-  (* FILL IN HERE *)
-Admitted.
+    induction n as [| n' IHn'].
+    - reflexivity.
+    - simpl. intros m p. rewrite IHn'. reflexivity.
+  Qed.
 
   (** **** Exercise: 1 point (plus_comm) *)
   (* Hint 1: you may need to use [plus_n_Sm]. *)
@@ -309,8 +338,12 @@ Admitted.
   Theorem plus_comm : forall n m : nat,
     plus n m = plus m n.
   Proof.
-  (* FILL IN HERE *)
-Admitted.
+    induction n as [| n' IHn'].
+    - simpl. induction m as [| m' IHm'].
+    -- reflexivity.
+    -- simpl. rewrite <- IHm'. reflexivity.
+    - simpl. intros m. rewrite IHn'. rewrite plus_n_Sm. reflexivity.
+  Qed.
 
   (** **** Exercise: 1 point (double_plus)  *)
   (** Consider the following function, which doubles its argument: *)
@@ -323,8 +356,10 @@ Admitted.
   (** Use induction to prove this simple fact about [double]: *)
   Lemma double_plus : forall n, double n = plus n n .
   Proof.
-  (* FILL IN HERE *)
-Admitted.
+    induction n as [| n' IHn'].
+    - reflexivity.
+    - simpl. rewrite IHn'. rewrite plus_n_Sm. reflexivity.
+  Qed.
 
 End NatGymnasium.
 
@@ -357,8 +392,10 @@ Module ListGynamsium.
   Theorem app_length {A : Type} : forall l1 l2 : list A,
       length (app l1 l2) = (length l1) + (length l2).
   Proof.
-  (* FILL IN HERE *)
-  Admitted.
+    induction l1.
+    - reflexivity.
+    - simpl. intros l2. rewrite IHl1. reflexivity.
+  Qed.
 
 End ListGynamsium.
 
@@ -372,16 +409,23 @@ End ListGynamsium.
 Theorem and_assoc : forall P Q R : Prop,
   P /\ (Q /\ R) -> (P /\ Q) /\ R.
 Proof.
-    (* FILL IN HERE *)
-Admitted.
+  intros P Q R [Hp [Hq Hr]].
+  split.
+  - split.
+  -- apply Hp.
+  -- apply Hq.
+  - apply Hr.
+Qed.
 
 (** **** Exercise: 1 point (or_commut)  *)
 (** Prove that logical disjunction is commutative using [destruct], [left], and [right]. *)
 Theorem or_commut : forall P Q : Prop,
   P \/ Q  -> Q \/ P.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  intros P Q [].
+  - right. apply H.
+  - left. apply H. 
+Qed.
 
 (** **** Exercise: 1 point (contrapositive)  *)
 (* Prove that evidence of an implication also entails its
@@ -389,8 +433,13 @@ Admitted.
 Theorem contrapositive : forall (P Q : Prop),
   (P -> Q) -> (~Q -> ~P).
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  intros P Q H.
+  unfold not.
+  intros Hnq Hp.
+  apply H in Hp as Hq.
+  apply Hnq in Hq as contra.
+  destruct contra.
+Qed.
 
 (* ================================================================= *)
 (* Inductively defined propositions: *)
@@ -407,17 +456,21 @@ Inductive ev : nat -> Prop :=
 Theorem ev_double : forall n,
   ev (n + n).
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  induction n.
+  - simpl. apply ev_0.
+  - rewrite <- Peano.plus_n_Sm. simpl. apply ev_SS. apply IHn.
+Qed.
 
 (** **** Exercise: 1 point (ev_sum)  *)
 (* Prove that the sum of two even numbers is also even.
    Hint: Consider inducting on one of the eveness assumptions. *)
 Theorem ev_sum : forall n m, ev n -> ev m -> ev (n + m).
 Proof.
-  (* FILL IN HERE *)
-Admitted.
-
+  intros n m Hevn Hevm.
+  induction Hevn as [|n' E' IH].
+  - simpl. apply Hevm.
+  - simpl. apply ev_SS. apply IH.
+Qed.
 (* ================================================================= *)
 (* Putting it all together: Search Trees Revisited *)
 
@@ -442,14 +495,21 @@ Inductive Forall {A : Type} (P : A -> Prop) : list A -> Prop :=
    well-formed. You might find the [Forall] proposition defined above
    useful.  *)
 Inductive WF_StudentsTree : StudentsTree -> Prop :=
-  (* FILL IN HERE *) .
+| WF_StudentsTree_empty : WF_StudentsTree empty
+| WF_StudentsTree_node : forall (key : nat) (records : list Student) (lt rt : StudentsTree),
+  Forall (fun s => (getAge s) = key) records ->
+  Forall (fun s => (getAge s) < key) (EnumerateStudents lt) ->
+  Forall (fun s => (getAge s) > key) (EnumerateStudents rt) ->
+  WF_StudentsTree lt ->
+  WF_StudentsTree rt ->
+  WF_StudentsTree (node key records lt rt).
 
 (* Exercise: 1 points (exampleDBOK) *)
 (* As a sanity check, make sure the example database from above is well-formed. *)
 Example exampleDBOK : WF_StudentsTree exampleDB.
 Proof.
-    (* FILL IN HERE *)
-Admitted.
+  repeat constructor.
+Qed.
 
 (* OPTIONAL Exercise: (FindStudentOK_1) *)
 (* We can also *prove* that search behave correctly, assuming that
@@ -460,8 +520,15 @@ Lemma FindStudentOK_1 :
     WF_StudentsTree db ->
     FindStudent (getAge person) (AddStudent person db) = person :: (FindStudent (getAge person) db).
 Proof.
-  (* FILL IN HERE IF YOU ARE FEELING ADVENTUROUS. *)
-Admitted.
+  intros [] db H.
+  induction H; simpl.
+  - rewrite eqb_refl. reflexivity.
+  - destruct (age =? key) eqn:H4.
+  -- simpl. rewrite H4. reflexivity.
+  -- destruct (age <=? key) eqn:H5; simpl; rewrite H4; rewrite H5.
+  --- apply IHWF_StudentsTree1.
+  --- apply IHWF_StudentsTree2.
+Qed.
 
 (* OPTIONAL Exercise: (FindStudentOK_2) *)
 Lemma FindStudentOK_2 :
@@ -471,9 +538,27 @@ Lemma FindStudentOK_2 :
       (getAge person =? age) = false ->
       FindStudent age (AddStudent person db) = (FindStudent age db).
 Proof.
-    (* FILL IN HERE IF YOU ARE FEELING ADVENTUROUS. *)
-Admitted.
-
+  intros.
+  destruct person.
+  simpl in H0.
+  induction H; simpl.
+  - rewrite eqb_sym. rewrite H0. destruct (age <=? age0); reflexivity.
+  - destruct (age0 =? key) eqn:H5.
+  -- rewrite eqb_eq in H5.
+     rewrite H5 in H0.
+     simpl.
+     rewrite eqb_sym.
+     rewrite H0.
+     reflexivity.
+  -- destruct (age0 <=? key) eqn:H6;
+     destruct (age =? key) eqn:H7;
+     simpl;
+     rewrite H7.
+  --- reflexivity.
+  --- rewrite IHWF_StudentsTree1. reflexivity.
+  --- reflexivity.
+  --- rewrite IHWF_StudentsTree2. reflexivity.   
+Qed.
 (* OPTIONAL Exercise: (AddStudentOK) *)
 (* We can also *prove* that insertion maintains the invariant that an
    updated database is well-formed. Like the previous lemmas, this is
@@ -484,5 +569,9 @@ Lemma AddStudentOK :
     forall (person : Student),
       WF_StudentsTree (AddStudent person db).
 Proof.
-    (* FILL IN HERE IF YOU ARE FEELING ADVENTUROUS. *)
+  intros.
+  destruct person.
+  induction H.
+  - repeat constructor.
+  - 
 Admitted.
