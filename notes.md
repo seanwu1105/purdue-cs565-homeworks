@@ -73,6 +73,16 @@ immediately.
 `exfalso` is to prove **a goal** that is nonsensical (e.g., the goal state is
 false = true).
 
+### `induction`
+
+Lab 3 Recording (53:00):
+
+> Only introduce as much as you need to into the set of assumptions before doing
+> an induction. Because then, the more universally quantified things you have in
+> your goal, the more universally quantified things you will have in your
+> inductive hypothesis, which is the more things you have the freedom to choose
+> when you apply that inductive hypothesis.
+
 ## Commands
 
 ### `Search`
