@@ -92,7 +92,7 @@ Print or.
 Lemma ElimOr : forall (A B C : Prop),
     (A \/ B) -> (A -> C) -> (B -> C) -> C.
 Proof.
-  intros A B C [HA | HB] ? ?.
+  intros A B C [HA | HB] ? ?. (* We can use a suffix after the question marks *)
   - apply H. exact HA.
   - apply H0. exact HB.
 Qed.
@@ -174,6 +174,10 @@ Definition ev' (n : nat) := exists m, n = double m.
 Lemma ev_even_firsttry : forall n,
   ev n -> ev' n.
 Proof.
+  intros.
+  inversion H.
+  - exists 0.
+    reflexivity. 
   (* WORK IN CLASS USING INVERSION *)
  Admitted.
 
@@ -293,13 +297,25 @@ Module IndEvidencePlayground.
   Theorem test_le3 :
     (2 <= 1) -> 2 + 2 = 5.
   Proof.
-  (* WORK IN CLASS *) Admitted.
+    intros.
+    (* Try to find an evidence that 2 <= 1 *)
+    inversion H.
+    subst.
+
+    (* Try to match each constructor to find an evidence that 2 <= 0 *)
+    (* le_n constructor cannot be used and le_S neither, thus it is H2 is False 
+       and end the proof. *)
+    inversion H2.
+  Qed.
 
   Lemma le_trans : forall (m n o : nat),
       le m n -> le n o -> le m o.
   Proof.
     intros m n o le_m_n le_n_o.
+    
+    (* Put a introduced variable back to forall quantifier *)
     generalize dependent m.
+    
     induction le_n_o.
     - intros m le_m_n.
       (* We could solve this goal with [apply le_m_n], but let's learn a
@@ -337,7 +353,13 @@ Module IndEvidencePlayground.
   Proof.
     intros A l l' E.
     induction E.
-  (* WORK IN CLASS *) Admitted.
+    - apply perm_nil.
+    - apply perm_skip. apply IHE.
+    - apply perm_swap.
+    - apply perm_trans with l'.
+    -- apply IHE2.
+    -- apply IHE1.
+  Qed.
 
 End IndEvidencePlayground.
 
@@ -499,9 +521,8 @@ e1 ==> n1 	e2 ==> n2
        proposition as an assumption; this contains considerably
        more information than [a] alone. So, let's induct on that! *)
     Undo 3.
-    induction H.
-    (* WORK IN CLASS: *)
-  Admitted.
+    induction H; simpl; subst; reflexivity.
+  Qed.
 
 End AutomationPlayground.
 
