@@ -1,0 +1,234 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amsthm,amssymb,amsfonts}
+\usepackage{syntax}
+\usepackage{bcprules}
+\usepackage{bm}
+\usepackage{listings}
+\usepackage{wrapfig}
+\newtheorem{theorem}{Theorem}
+\usepackage{hyperref}
+
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\somany}[1]{$\overline{\mathsf{#1}}$}
+
+\newenvironment{problem}[2][Problem]{\begin{trivlist}
+\item[\hskip \labelsep {\bfseries #1}\hskip \labelsep {\bfseries #2.}]}{\end{trivlist}}
+
+\lstset{ %
+  basicstyle=\sf,  %
+  breaklines=true, %
+  columns=fullflexible, %
+  literate={<=}{$\le\;$}{1}
+  {EMPTY}{$\emptyset\;$}{1}
+  {/=>}{$\Downarrow$}{1}
+  {|->}{$\mapsto\;$}{1}
+  {/\\}{$\;\land\;$}{1},
+  morekeywords={if,
+    while,
+    then,
+    else,
+    do,
+    skip,
+    break
+  }
+}
+
+\begin{document}
+
+\title{CS 565 Spring 2022 Homework 3 (Big-Step Semantics)}
+\author{Your name: \underline{\hspace{10cm}}}
+\maketitle
+
+Using the big-step operational semantics of \textsc{Imp} (shown in
+\autoref{fig:imp+sem}), either (i) fill in the final states produced
+by each of the following \textsc{Imp} programs and give a derivation
+justifying your answer \textbf{or} (ii) state that the program does
+not terminate. \textbf{Note}: You don't need to supply the derivations
+for any arithmetic or boolean expressions, just for the \textsc{Imp}
+statements.
+
+\begin{problem}{1 (1 point)}
+\end{problem}
+\vspace{6cm}
+\begin{center}
+  \lstinline!EMPTY, X := 0; Y := 1 /=> !
+\end{center}
+
+
+\begin{problem}{2 (1 point)}
+\end{problem}
+\vspace{6cm}
+\begin{center}
+  \lstinline![X|->2], if (X <= 1) then Y := X + 3 else Z := 4 end /=>!
+\end{center}
+
+\pagebreak
+
+\begin{problem}{3 (1 point)}
+\end{problem}
+\vspace{6cm}
+\begin{center}
+  \lstinline![X|->0], while (X <= 1) do Y := Y + 1 end /=>!
+\end{center}
+
+\begin{problem}{4 (1 point)}
+\end{problem}
+\begin{center}
+  \vspace{14cm}
+  \lstinline![Y|->0], while (Y <= 1) do Y := Y + 1 end /=>!
+\end{center}
+
+
+\pagebreak
+
+\begin{problem}{5 (2 points)}
+  Several cutting edge languages, including Perl, Visual Basic, and
+  Pascal include a \lstinline|repeat c until b| loop construct.  These
+  loops differ from the standard \lstinline|while| loops in two ways:
+  \begin{enumerate}
+  \item the loop guard is checked /after/ the execution of the body, so
+      the loop always executes at least once.
+    \item the loop continues executing as long as the condition is
+      false.
+    \end{enumerate}
+    Write down the big-step reduction rules for \lstinline|repeat|
+    loops in IMP.
+  \end{problem}
+
+\pagebreak
+\begin{figure}
+
+  \begin{tabular}{lll}
+  \begin{minipage}{.25\linewidth}
+  \infrule[E-Var]
+  {}
+  {\sigma, \text{\lstinline|x|} \Downarrow_A \sigma(x)}
+\end{minipage}
+&
+\begin{minipage}{.25\linewidth}
+  \infrule[E-Const]
+  { }
+  {\sigma, \text{\lstinline|n|} \Downarrow_A \text{\lstinline|n|}}
+\end{minipage}
+    & \begin{minipage}{.45\linewidth}
+      \infrule[E-Add]
+      {\sigma, \text{\lstinline|a|}_1 \Downarrow_A \text{\lstinline|m|}
+        \andalso \text{\lstinline|a|}_2 \Downarrow_A \text{\lstinline|n|}}
+      {\sigma, \text{\lstinline|a|}_1 \text{\lstinline|+ a|}_2  \Downarrow_A \text{\lstinline|m + n|}}
+\end{minipage} \\\\\hline\\
+  \end{tabular}
+
+  \begin{tabular}{lll}
+    \begin{minipage}{.3\linewidth}
+      \infrule[E-True]
+      {}
+      {\sigma, \text{\lstinline|true|} \Downarrow_B \text{\lstinline|true|}}
+    \end{minipage}
+    &
+      \begin{minipage}{.3\linewidth}
+        \infrule[E-False]
+        {}
+        {\sigma, \text{\lstinline|false|} \Downarrow_B \text{\lstinline|false|}}
+      \end{minipage}
+    &
+      \begin{minipage}{.4\linewidth}
+        \infrule[E-And]
+        {\sigma, \text{\lstinline|b|}_1 \Downarrow_B \text{\lstinline|t|}
+          \andalso \text{\lstinline|b|}_2 \Downarrow_B \text{\lstinline|v|}}
+        {\sigma, \text{\lstinline|b|}_1 \text{\lstinline|/\\ b|}_2  \Downarrow_B \text{\lstinline|t /\\ v|}}
+      \end{minipage}
+  \end{tabular}
+
+  \begin{tabular}{ll}
+    \\
+      \begin{minipage}{.4\linewidth}
+        \infrule[E-NotT]
+        {\sigma, \text{\lstinline|b|} \Downarrow_B \text{\lstinline|true|}}
+        {\sigma, \lnot \text{\lstinline|b|} \Downarrow_B \text{\lstinline|false|}}
+      \end{minipage}
+    &
+      \begin{minipage}{.4\linewidth}
+        \infrule[E-NotF]
+        {\sigma, \text{\lstinline|b|} \Downarrow_B \text{\lstinline|false|}}
+        {\sigma, \lnot \text{\lstinline|b|} \Downarrow_B \text{\lstinline|true|}}
+      \end{minipage} \\ \\
+    \begin{minipage}{.4\linewidth}
+      \infrule[E-CmpT]
+      {\sigma, \text{\lstinline|a|}_1 \Downarrow_A \text{\lstinline|n|}
+        \andalso \sigma, \text{\lstinline|a|}_2 \Downarrow_A \text{\lstinline|n|}}
+      {\sigma, \text{\lstinline|a|}_1 \text{\lstinline|= a|}_2  \Downarrow_B \text{\lstinline|true|}}
+    \end{minipage} &
+        \begin{minipage}{.4\linewidth}
+        \infrule[E-CmpF]
+        {\sigma, \text{\lstinline|a|}_1 \Downarrow_A \text{\lstinline|m|}
+          \andalso \sigma, \text{\lstinline|a|}_2 \Downarrow_A \text{\lstinline|n|}
+          \andalso m \neq n}
+        {\sigma, \text{\lstinline|a|}_1 \text{\lstinline|= a|}_2  \Downarrow_B \text{\lstinline|true|}}
+      \end{minipage} \\\\\hline\\
+
+  \begin{minipage}{.4\linewidth}
+  \infrule[E-Skip]
+  {}
+  {\sigma, \text{\lstinline|skip|} \Downarrow \sigma}
+\end{minipage}
+&
+\begin{minipage}{.4\linewidth}
+  \infrule[E-Ass]
+  {\sigma, \text{\lstinline|a|} \Downarrow_A \text{\lstinline|n|}}
+  {\sigma, \text{\lstinline|x := a|} \Downarrow
+    \sigma[\text{\lstinline|x|}\mapsto\text{\lstinline|n|}]}
+  \end{minipage}
+\\\\
+\begin{minipage}{.4\linewidth}
+  \infrule[E-Seq]
+  {\sigma, \text{\lstinline|c|}_1 \Downarrow \sigma_1
+    \andalso \sigma_1, \text{\lstinline|c|}_2 \Downarrow \sigma_2
+  }
+  {\sigma, \text{\lstinline|c|}_1; \text{\lstinline|c|}_2 \Downarrow
+    \sigma_2}
+\end{minipage}
+&
+\begin{minipage}{.45\linewidth}
+  \infrule[E-IfTrue]
+  {\sigma, \text{\lstinline|b|} \Downarrow_B \text{\lstinline|true|}
+    \andalso \sigma, \text{\lstinline|c|}_1 \Downarrow \sigma_1
+  }
+  {\sigma, \text{\lstinline|if b then c|}_1~ \text{else \lstinline|c|}_2 \Downarrow
+    \sigma_1}
+\end{minipage}
+\\\\
+\begin{minipage}{.5\linewidth}
+  \infrule[E-IfFalse]
+  {\sigma, \text{\lstinline|b|} \Downarrow_B \text{\lstinline|false|}
+    \andalso \sigma, \text{\lstinline|c|}_2 \Downarrow \sigma_2
+  }
+  {\sigma, \text{\lstinline|if b then c|}_1~ \text{else \lstinline|c|}_2 \Downarrow
+    \sigma_2}
+\end{minipage} &
+\begin{minipage}{.45\linewidth}
+  \infrule[E-WhileFalse]
+  {
+    \sigma, \text{\lstinline|b|} \Downarrow_B \text{\lstinline|false|}
+  }
+  {\sigma, \text{\lstinline|while b do {c}|} \Downarrow \sigma}
+\end{minipage}
+  \end{tabular}
+  \infrule[E-WhileTrue]
+  {
+    \sigma, \text{\lstinline|b|} \Downarrow_B \text{\lstinline|true|}
+      \andalso
+      \sigma, \text{\lstinline|c|} \Downarrow \sigma_1
+      \andalso
+      \sigma_1, \text{\lstinline|while b do {c}|} \Downarrow \sigma_2
+    }
+    {\sigma, \text{\lstinline|while b do {c}|} \Downarrow \sigma_2}
+    \caption{Big-step semantics of arithemetic expressions, boolean
+      expressions, and regular \textsc{IMP}.}
+    \label{fig:imp+sem}
+  \end{figure}
+  \pagebreak
+
+\end{document}
