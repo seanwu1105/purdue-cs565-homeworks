@@ -4,6 +4,7 @@
 \usepackage{amsmath,amsthm,amssymb,amsfonts}
 \usepackage{syntax}
 \usepackage{bcprules}
+\usepackage{mathpartir}
 \usepackage{bm}
 \usepackage{listings}
 \usepackage{wrapfig}
@@ -39,7 +40,7 @@
 \begin{document}
 
 \title{CS 565 Spring 2022 Homework 3 (Big-Step Semantics)}
-\author{Your name: \underline{\hspace{10cm}}}
+\author{Your name: \underline{Shuang Wu (wu1716@purdue.edu)}}
 \maketitle
 
 Using the big-step operational semantics of \textsc{Imp} (shown in
@@ -52,33 +53,102 @@ statements.
 
 \begin{problem}{1 (1 point)}
 \end{problem}
-\vspace{6cm}
 \begin{center}
-  \lstinline!EMPTY, X := 0; Y := 1 /=> !
+  \begin{mathpar}
+    \inferrule*[Right=E-Seq]
+    {
+      \inferrule*[Left=E-Ass]
+      {\inferrule*[Left=E-Const]{ }{\emptyset, 0 \Downarrow_A 0}}
+      {\lstinline!EMPTY, X := 0 /=> [X|->0]!}
+      \and
+      \inferrule*[Right=E-Ass]
+      {\inferrule*[Right=E-Const]{ }{\lstinline![X|->0]!, 1 \Downarrow_A 1}}
+      {\lstinline![X|->0], Y := 1 /=> [X|->0][Y|->1]!}
+    }
+    {\lstinline!EMPTY, X := 0; Y := 1 /=> [X|->0][Y|->1]!}
+  \end{mathpar}
 \end{center}
 
 
 \begin{problem}{2 (1 point)}
 \end{problem}
-\vspace{6cm}
 \begin{center}
-  \lstinline![X|->2], if (X <= 1) then Y := X + 3 else Z := 4 end /=>!
+  \begin{mathpar}
+    \inferrule*[Right=E-IfFalse]
+    {
+      \inferrule*[Left=E-False]{ }
+      {[X\mapsto2], X \le 1 \Downarrow_B \text{false}}
+      \and
+      \inferrule*[Right=E-Ass]
+      {
+        \inferrule*[Right=E-Count]{ }
+        {[X\mapsto2], 4 \Downarrow_A 4}
+      }
+      {[X\mapsto2], Z := 4 \Downarrow [X\mapsto2][Z\mapsto4]}
+    }
+    {[X\mapsto2], \textbf{if}~ (X \le 1) ~\textbf{then}~ Y := X + 3 ~\textbf{else}~ Z := 4 ~\textbf{end} \Downarrow [X\mapsto2][Z\mapsto4]}
+  \end{mathpar}
 \end{center}
 
 \pagebreak
 
 \begin{problem}{3 (1 point)}
 \end{problem}
-\vspace{6cm}
 \begin{center}
-  \lstinline![X|->0], while (X <= 1) do Y := Y + 1 end /=>!
+  $[X\mapsto0], \textbf{while}~ (X\le1) ~\textbf{do}~ Y := Y + 1 ~\textbf{end}~ \Downarrow$
 \end{center}
+The program does not terminate.
 
 \begin{problem}{4 (1 point)}
 \end{problem}
 \begin{center}
-  \vspace{14cm}
-  \lstinline![Y|->0], while (Y <= 1) do Y := Y + 1 end /=>!
+  \begin{mathpar}
+    \inferrule*[Right=E-WhileTrue]
+    {
+      \inferrule*[Left=E-True]{ }
+      {[Y\mapsto0], Y \le 1 \Downarrow_B \text{true}}
+      \\
+      \inferrule*[Right=E-Ass]
+      {
+        \inferrule*[Right=E-Add]
+        {
+          \inferrule*[Left=E-Var]{ }
+          {[Y\mapsto0], Y \Downarrow_A 0}
+          \\
+          \inferrule*[Right=E-Const]{ }
+          {[Y\mapsto0], 1 \Downarrow_A 1}
+        }
+        {[Y\mapsto0], Y + 1 \Downarrow_A 1}
+      }
+      {[Y\mapsto0], Y := Y + 1 \Downarrow [Y\mapsto1]}
+      \\
+      \inferrule*[Right=E-WhileTrue]
+      {
+        \inferrule*[Left=E-True]{ }
+        {[Y\mapsto1], (Y \le 1) \Downarrow_B \text{true}}
+        \\
+        \inferrule*[Right=E-Ass]
+        {
+          \inferrule*[Right=E-Add]
+          {
+            \inferrule*[Left=E-Var]{ }
+            {[Y\mapsto1], Y \Downarrow_A 1}
+            \\
+            \inferrule*[Right=E-Const]{ }
+            {[Y\mapsto1], 1 \Downarrow_A 1}
+          }
+          {[Y\mapsto1], Y := Y + 1 \Downarrow_A 2}
+        }
+        {[Y\mapsto1], Y := Y + 1 \Downarrow [Y\mapsto2]}
+        \\
+        \inferrule*[Right=E-WhileFalse]
+        {\inferrule*[Left=E-False]{ }{[Y\mapsto2], Y \le 1 \Downarrow_B \text{false}}}
+        {[Y\mapsto2], \textbf{while}~ (Y \le 1) ~\textbf{do}~ Y := Y + 1 ~\textbf{end} \Downarrow [Y\mapsto2]}
+      }
+      {[Y\mapsto1], \textbf{while}~ (Y \le 1) ~\textbf{do}~ Y := Y + 1 ~\textbf{end} \Downarrow [Y\mapsto2]}
+    }
+    {[Y\mapsto0], \textbf{while}~ (Y \le 1) ~\textbf{do}~ Y := Y + 1 ~\textbf{end} \Downarrow [Y\mapsto2]}
+  \end{mathpar}
 \end{center}
 
 
@@ -89,14 +159,38 @@ statements.
   Pascal include a \lstinline|repeat c until b| loop construct.  These
   loops differ from the standard \lstinline|while| loops in two ways:
   \begin{enumerate}
-  \item the loop guard is checked /after/ the execution of the body, so
+    \item the loop guard is checked /after/ the execution of the body, so
       the loop always executes at least once.
     \item the loop continues executing as long as the condition is
       false.
-    \end{enumerate}
-    Write down the big-step reduction rules for \lstinline|repeat|
-    loops in IMP.
-  \end{problem}
+  \end{enumerate}
+  Write down the big-step reduction rules for \lstinline|repeat|
+  loops in IMP.
+\end{problem}
+
+\begin{center}
+  \begin{mathpar}
+    \inferrule*[Right=E-RepeatTrue]
+    {
+      \sigma, \text{c} \Downarrow \sigma_1
+      \\
+      \sigma_1, \text{b} \Downarrow_B \text{true}
+    }
+    {\sigma, \textbf{repeat}~ \text{c}~ \textbf{until}~ \text{b} \Downarrow \sigma_1}
+  \end{mathpar}
+  
+  \begin{mathpar}
+    \inferrule*[Right=E-RepeatFalse]
+    {
+      \sigma, \text{c} \Downarrow \sigma_1
+      \\
+      \sigma_1, \text{b} \Downarrow_B \text{false}
+      \\
+      \sigma_1, \textbf{repeat}~ \text{c}~ \textbf{until}~ \text{b} \Downarrow \sigma_2
+    }
+    {\sigma, \textbf{repeat}~ \text{c}~ \textbf{until}~ \text{b} \Downarrow \sigma_2}
+  \end{mathpar}
+\end{center}
 
 \pagebreak
 \begin{figure}
