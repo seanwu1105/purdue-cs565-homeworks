@@ -63,6 +63,9 @@ DON'T DO ANYTHING.
 - Proposition chain == conjunction (AND)
   - `destruct H as [A B]`
   - `intros [A B]`
+- Destruct existential quantifier to get a witness `x` and the hypothesis
+  stating that `P` holds of `x`
+  - `destruct H as [x Hx]`
 
 ### `discriminate` vs `exfalso`
 

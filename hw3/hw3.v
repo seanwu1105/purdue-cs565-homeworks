@@ -462,7 +462,7 @@ Module ISASemantics.
      st =[mov (reg r1) (memReg r2)]=> setMemReg r2 (getReg r1 st) st *)
 
   (* ======================================================
-     st =[mov (memImm idx) (reg r2)]=> setReg r2 idx st *)
+     st =[mov (memImm idx) (reg r2)]=> setReg r2 (getMemImm idx st) st *)
 
   (* ===================================================================
      st =[mov (reg r1) (memImm idx)]=> setMemImm idx (getReg r1 st) st *)
