@@ -133,8 +133,19 @@ Qed.
 (** Exercise: 1 point (ev'_ev) *)
 Theorem ev'_ev : forall n, ev' n <-> ev n.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  intros.
+  unfold iff.
+  split.
+  - intros. induction H.
+  -- constructor.
+  -- repeat constructor.
+  -- apply ev_sum; assumption.
+  - intros. induction H.
+  -- constructor.
+  -- apply (ev'_sum 2 n).
+  --- constructor.
+  --- assumption.
+Qed.
 
 (** Exercise: 1 point (ev_ev__ev) *)
 (* Prove that whenever the sum of two numbers is even, if the first
@@ -144,8 +155,11 @@ Admitted.
 Theorem ev_ev__ev : forall n m,
   ev (n + m) -> ev n -> ev m.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  intros.
+  induction H0.
+  - assumption.
+  - apply IHev. inversion H. assumption.
+Qed.
 
 (* A palindrome is a word or sequence that reads the same backward as
    forward, e.g. [1;3;4;4;3;1] or [1;2;2;1]. Here's a set of inference
@@ -181,8 +195,16 @@ Definition IsPalindrome' (l : list nat) : Prop :=
 Lemma IsPalindrome_equiv : forall l,
     IsPalindrome l -> IsPalindrome' l.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  intros.
+  induction H; unfold IsPalindrome'.
+  - exists [].
+    reflexivity.
+  - inversion IHIsPalindrome.
+    rewrite H0.
+    exists ([n] ++ x).
+    rewrite <- app_assoc.
+    reflexivity.
+Qed.
 
 (* ================================================================= *)
 (* Big-Step Semantics *)
@@ -263,10 +285,11 @@ Module ImpPlusFlip.
       st  =[ c ]=> st' ->
       st' =[ while b do c end ]=> st'' ->
       st  =[ while b do c end ]=> st''
-
-  (* FILL IN YOUR RULES HERE: *)
-
-
+  | E_FlipTrue : forall st st' c,
+      st  =[ c ]=> st' ->
+      st  =[ flip c end ]=> st'
+  | E_FlipFalse : forall st c,
+      st  =[ flip c end ]=> st
   where "st =[ c ]=> st'" := (ceval c st st').
 
   (** **** Exercise: 2 point (p1_NN, p1_Y, p1_NY) *)
@@ -275,20 +298,46 @@ Module ImpPlusFlip.
   Example p1_NN : forall sigma,
       sigma =[ p1 ]=> (Y !-> 6; X !-> 2; sigma).
   Proof.
-    (* FILL IN HERE *)
-  Admitted.
+    intros. unfold p1.
+    apply E_Seq with (st':=(X !-> 2; sigma)).
+    apply E_Ass. reflexivity.
+    apply E_Seq with (st':=(Y !-> 6; X !-> 2; sigma)).
+    apply E_Ass. reflexivity.
+    apply E_Seq with (st':=(Y !-> 6; X !-> 2; sigma)).
+    apply E_FlipFalse.
+    apply E_IfTrue. reflexivity.
+    apply E_FlipFalse.
+  Qed.
 
   Example p1_Y : forall sigma,
       sigma =[ p1 ]=> (Y !-> 3; X !-> 4; Y !-> 6; X !-> 2; sigma).
   Proof.
-    (* FILL IN HERE *)
-  Admitted.
+    intros. unfold p1.
+    apply E_Seq with (st':=(X !-> 2; sigma)).
+    apply E_Ass. reflexivity.
+    apply E_Seq with (st':=(Y !-> 6; X !-> 2; sigma)).
+    apply E_Ass. reflexivity.
+    apply E_Seq with (st':=(X !-> 4; Y !-> 6; X !-> 2; sigma)).
+    apply E_FlipTrue.
+    apply E_Ass. reflexivity.
+    apply E_IfFalse. reflexivity.
+    apply E_Ass. reflexivity.
+  Qed.
 
   Example p1_NY : forall sigma,
       sigma =[ p1 ]=> (Y !-> 2; Y !-> 6; X !-> 2; sigma).
   Proof.
-    (* FILL IN HERE *)
-  Admitted.
+    intros. unfold p1.
+    apply E_Seq with (st':=(X !-> 2; sigma)).
+    apply E_Ass. reflexivity.
+    apply E_Seq with (st':=(Y !-> 6; X !-> 2; sigma)).
+    apply E_Ass. reflexivity.
+    apply E_Seq with (st':=(Y !-> 6; X !-> 2; sigma)).
+    apply E_FlipFalse.
+    apply E_IfTrue. reflexivity.
+    apply E_FlipTrue.
+    apply E_Ass. reflexivity.
+  Qed.
 
   (* OPTIONAL EXERCISE: *)
   (* Just for fun, try to show that the definition of ceval does not
@@ -321,8 +370,17 @@ Module ImpPlusFlip.
     exists sigmaI sigmaF1 sigmaF2 c,
       sigmaI =[ c ]=> sigmaF1 /\ sigmaI =[ c ]=> sigmaF2 /\ sigmaF1 <> sigmaF2.
   Proof.
-    (* FILL IN HERE, IF YOU WANT *)
-  Admitted.
+    exists (X !-> 0).
+    exists (Y !-> 1; X !-> 0).
+    exists (X !-> 0).
+    exists <{ flip (Y := 1) end}>.
+    split.
+    apply E_FlipTrue.
+    apply E_Ass. reflexivity.
+    split.
+    apply E_FlipFalse.
+    intros contra.
+  Qed.
 End ImpPlusFlip.
 
 Module ISASemantics.
