@@ -55,7 +55,13 @@ are using 1, three times, to write down a concrete representation of a number.
 `simpl` == `unfold` and then check if there are terms can changed but if not
 DON'T DO ANYTHING.
 
-### `destruct`
+### `destruct`, `inversion` and `induction`
+
+When dealing with evidence (inductive propositions).
+
+Rule of thumb: `destruct` < `inversion` < `induction`
+
+#### `destruct`
 
 - Case analysis == disjunction (OR)
   - `destruct H as [A | B]`
@@ -63,9 +69,34 @@ DON'T DO ANYTHING.
 - Proposition chain == conjunction (AND)
   - `destruct H as [A B]`
   - `intros [A B]`
+- **Destruct on evidence**
+  - If a hypothesis is an _inductive proposition_, it can be destructed to see
+    how it is built by case analysis.
+  - It's just like we destruct on data's constructors as `Prop` is actually a
+    data.
+  - We can use `inversion` to do such thing with MORE automation (`injection`
+    and `discriminate` following)!!
+    - Also, `inversion` help you to `remember` more evidence than `destruct`.
+    - If only using `destruct` on evidence (prop) is not enough, we need to use
+      `induction` on it!!
 - Destruct existential quantifier to get a witness `x` and the hypothesis
   stating that `P` holds of `x`
   - `destruct H as [x Hx]`
+
+#### `induction`
+
+Lab 3 Recording (53:00):
+
+> Only introduce as much as you need to into the set of assumptions before doing
+> an induction. Because then, the more universally quantified things you have in
+> your goal, the more universally quantified things you will have in your
+> inductive hypothesis, which is the more things you have the freedom to choose
+> when you apply that inductive hypothesis.
+
+- Is a more powerful version of `destruct`. Thus, it can be applied to `data` or
+  `prop` (evidence). The reason is that we will get additional sub-hypothesis or
+  sub-evidence in the subgoals.
+- Any thing you can prove with `destruct` can be proved with `induction`.
 
 ### `discriminate` vs `exfalso`
 
@@ -76,15 +107,11 @@ immediately.
 `exfalso` is to prove **a goal** that is nonsensical (e.g., the goal state is
 false = true).
 
-### `induction`
+### Automatic Tatics
 
-Lab 3 Recording (53:00):
-
-> Only introduce as much as you need to into the set of assumptions before doing
-> an induction. Because then, the more universally quantified things you have in
-> your goal, the more universally quantified things you will have in your
-> inductive hypothesis, which is the more things you have the freedom to choose
-> when you apply that inductive hypothesis.
+- `assumption`: find a hypothesis and apply it exactly.
+- `constructor`: find a constructor and apply it exactly.
+- `lia`: Automatically prove theorem about natural numbers.
 
 ## Commands
 
