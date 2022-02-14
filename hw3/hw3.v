@@ -366,20 +366,28 @@ Module ImpPlusFlip.
   (* Prove that the semantics of Imp+Flip are nondeterministic,
      i.e. that there exists a Imp+Flip program that evaluates to
      distinct final states from the same initial state. *)
+  From Coq Require Import Logic.FunctionalExtensionality.
+
   Lemma ceval_is_nondeterministic :
     exists sigmaI sigmaF1 sigmaF2 c,
       sigmaI =[ c ]=> sigmaF1 /\ sigmaI =[ c ]=> sigmaF2 /\ sigmaF1 <> sigmaF2.
   Proof.
     exists (X !-> 0).
-    exists (Y !-> 1; X !-> 0).
+    exists (X !-> 1; X !-> 0).
     exists (X !-> 0).
-    exists <{ flip (Y := 1) end}>.
+    exists <{ flip (X := 1) end}>.
     split.
     apply E_FlipTrue.
     apply E_Ass. reflexivity.
     split.
     apply E_FlipFalse.
     intros contra.
+    apply equal_f with (x:=X) in contra.
+    unfold t_update in contra.
+    destruct eqb_string eqn:condition.
+    - discriminate contra.
+    - rewrite <- eqb_string_refl in condition.
+      discriminate condition.
   Qed.
 End ImpPlusFlip.
 
