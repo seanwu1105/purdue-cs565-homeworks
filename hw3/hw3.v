@@ -554,8 +554,14 @@ Module ISASemantics.
       Instr_evalR st (mov (reg r1) (reg r2)) (setReg r2 (getReg r1 st) st)
   | E_MovImmReg : forall (n : nat) (r2 : Register) (st : MachineState),
       Instr_evalR st (mov (imm n) (reg r2)) (setReg r2 n st)
-
-  (* FILL IN YOUR RULES HERE: *) .
+  | E_MovMemRegReg : forall (r1 r2 : Register) (st : MachineState),
+      Instr_evalR st (mov (memReg r1) (reg r2)) (setReg r2 (getMemReg r1 st) st)
+  | E_MovRegMemReg : forall (r1 r2 : Register) (st : MachineState),
+      Instr_evalR st (mov (reg r1) (memReg r2)) (setMemReg r2 (getReg r1 st) st)
+  | E_MovMemImmReg : forall (idx : nat) (r2 : Register) (st : MachineState),
+      Instr_evalR st (mov (memImm idx) (reg r2)) (setReg r2 (getMemImm idx st) st)
+  | E_MovRegMemImm : forall (r1 : Register) (idx : nat) (st : MachineState),
+      Instr_evalR st (mov (reg r1) (memImm idx)) (setMemImm idx (getReg r1 st) st).
 
   (* A program in our ISA now consists of a set of named 'basic
      blocks', i.e. straight-line code with no conditionals. Each basic
@@ -608,8 +614,23 @@ Module ISASemantics.
   Inductive BasicBlock_step : Program ->
                               MachineState -> BasicBlock ->
                               MachineState -> BasicBlock -> Prop :=
-
-  (* FILL IN YOUR RULES HERE: *) .
+  | E_EvalBlock :
+      forall p ms ms' ID i body NextBlockT NextBlockF,
+      Instr_evalR ms i ms' ->
+      BasicBlock_step p ms (Block ID (i :: body) NextBlockT NextBlockF)
+                          ms' (Block ID body NextBlockT NextBlockF)
+  | E_NextBlockT :
+      forall p ms ID NextID body NextBlockF NextBlockT' NextBlockF',
+      p NextID = (Block NextID body NextBlockT' NextBlockF') ->
+      getFlag ms = true ->
+      BasicBlock_step p ms (Block ID [ ] (Name NextID) NextBlockF)
+                        ms (Block NextID body NextBlockT' NextBlockF')
+  | E_NextBlockF :
+      forall p ms ID NextID body NextBlockT NextBlockT' NextBlockF',
+      p NextID = (Block NextID body NextBlockT' NextBlockF') ->
+      getFlag ms = false ->
+      BasicBlock_step p ms (Block ID [ ] NextBlockT (Name NextID))
+                        ms (Block NextID body NextBlockT' NextBlockF').
 
   (* The multistep relation for basic blocks is a standard adaptation
   of the definition in [SmallStep.v]: *)
