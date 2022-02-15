@@ -659,8 +659,22 @@ Module ISASemantics.
                            (MState c a c f m)
                            (Block "Entry" [] Exit Exit).
   Proof.
-    (* FILL IN HERE *)
-  Admitted.
+    intros.
+    apply BB_multi_trans with (st2:=(MState a c c f m))
+                              (b2:=(Block "Entry"
+                                    [mov (reg ax) (reg cx);
+                                     mov (reg dx) (reg ax)]
+                                    Exit Exit)).
+    - apply E_EvalBlock. apply E_MovRegReg.
+    - apply BB_multi_trans with (st2:=(MState a a c f m))
+                              (b2:=(Block "Entry" [mov (reg dx) (reg ax)]
+                                    Exit Exit)).
+    -- apply E_EvalBlock. apply E_MovRegReg.
+    -- apply BB_multi_trans with (st2:=(MState c a c f m))
+                              (b2:=(Block "Entry" [] Exit Exit)).
+    --- apply E_EvalBlock. apply E_MovRegReg.
+    --- apply BB_multi_refl.
+  Qed.
 
   (** Exercise: 1 point (Instr_evalR_deterministic) *)
   (* Prove that the evaluation of instructions is deterministic: *)
