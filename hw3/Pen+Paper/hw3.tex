@@ -76,7 +76,16 @@ statements.
   \begin{mathpar}
     \inferrule*[Right=E-IfFalse]
     {
-      \inferrule*[Left=E-False]{ }
+      \inferrule*[Left=E-LeF]
+      {
+        \inferrule*[Left=E-Var] { }
+        {[X\mapsto2], X \Downarrow_A 2}
+        \\
+        \inferrule*[Right=E-Const] { }
+        {[X\mapsto2], 1 \Downarrow_A 1}
+        \\
+        1 < 2
+      }
       {[X\mapsto2], X \le 1 \Downarrow_B \text{false}}
       \and
       \inferrule*[Right=E-Ass]
@@ -105,7 +114,16 @@ The program does not terminate.
   \begin{mathpar}
     \inferrule*[Right=E-WhileTrue]
     {
-      \inferrule*[Left=E-True]{ }
+      \inferrule*[Left=E-LeT]
+      {
+        \inferrule*[Left=E-Var]{ }
+        {[Y\mapsto0], Y \Downarrow_A 0}
+        \\
+        \inferrule*[Right=E-Const]{ }
+        {[Y\mapsto0], 1 \Downarrow_A 1}
+        \\
+        0 \le 1
+      }
       {[Y\mapsto0], Y \le 1 \Downarrow_B \text{true}}
       \\
       \inferrule*[Right=E-Ass]
@@ -120,34 +138,55 @@ The program does not terminate.
         }
         {[Y\mapsto0], Y + 1 \Downarrow_A 1}
       }
-      {[Y\mapsto0], Y := Y + 1 \Downarrow [Y\mapsto1]}
+      {[Y\mapsto0], Y := Y + 1 \Downarrow [Y\mapsto0][Y\mapsto1]}
       \\
       \inferrule*[Right=E-WhileTrue]
       {
-        \inferrule*[Left=E-True]{ }
-        {[Y\mapsto1], (Y \le 1) \Downarrow_B \text{true}}
+        \inferrule*[Left=E-LeT]
+        {
+          \inferrule*[Left=E-Var]{ }
+          {[Y\mapsto0][Y\mapsto1], Y \Downarrow_A 1}
+          \\
+          \inferrule*[Right=E-Const]{ }
+          {[Y\mapsto0][Y\mapsto1], 1 \Downarrow_A 1}
+          \\
+          1 \le 1
+        }
+        {[Y\mapsto0][Y\mapsto1], (Y \le 1) \Downarrow_B \text{true}}
         \\
         \inferrule*[Right=E-Ass]
         {
           \inferrule*[Right=E-Add]
           {
             \inferrule*[Left=E-Var]{ }
-            {[Y\mapsto1], Y \Downarrow_A 1}
+            {[Y\mapsto0][Y\mapsto1], Y \Downarrow_A 1}
             \\
             \inferrule*[Right=E-Const]{ }
-            {[Y\mapsto1], 1 \Downarrow_A 1}
+            {[Y\mapsto0][Y\mapsto1], 1 \Downarrow_A 1}
           }
-          {[Y\mapsto1], Y := Y + 1 \Downarrow_A 2}
+          {[Y\mapsto0][Y\mapsto1], Y := Y + 1 \Downarrow_A 2}
         }
-        {[Y\mapsto1], Y := Y + 1 \Downarrow [Y\mapsto2]}
+        {[Y\mapsto0][Y\mapsto1], Y := Y + 1 \Downarrow [Y\mapsto0][Y\mapsto1][Y\mapsto2]}
         \\
         \inferrule*[Right=E-WhileFalse]
-        {\inferrule*[Left=E-False]{ }{[Y\mapsto2], Y \le 1 \Downarrow_B \text{false}}}
-        {[Y\mapsto2], \textbf{while}~ (Y \le 1) ~\textbf{do}~ Y := Y + 1 ~\textbf{end} \Downarrow [Y\mapsto2]}
+        {
+          \inferrule*[Left=E-LeF]
+          {
+            \inferrule*[Left=E-Var]{ }
+            {[Y\mapsto0][Y\mapsto1][Y\mapsto2], Y \Downarrow_A 2}
+            \\
+            \inferrule*[Right=E-Const]{ }
+            {[Y\mapsto0][Y\mapsto1][Y\mapsto2], 1 \Downarrow_A 1}
+            \\
+            1 < 2
+          }
+          {[Y\mapsto0][Y\mapsto1][Y\mapsto2], Y \le 1 \Downarrow_B \text{false}}
+        }
+        {[Y\mapsto0][Y\mapsto1][Y\mapsto2], \textbf{while}~ (Y \le 1) ~\textbf{do}~ Y := Y + 1 ~\textbf{end} \Downarrow [Y\mapsto0][Y\mapsto1][Y\mapsto2]}
       }
-      {[Y\mapsto1], \textbf{while}~ (Y \le 1) ~\textbf{do}~ Y := Y + 1 ~\textbf{end} \Downarrow [Y\mapsto2]}
+      {[Y\mapsto0][Y\mapsto1], \textbf{while}~ (Y \le 1) ~\textbf{do}~ Y := Y + 1 ~\textbf{end} \Downarrow [Y\mapsto0][Y\mapsto1][Y\mapsto2]}
     }
-    {[Y\mapsto0], \textbf{while}~ (Y \le 1) ~\textbf{do}~ Y := Y + 1 ~\textbf{end} \Downarrow [Y\mapsto2]}
+    {[Y\mapsto0], \textbf{while}~ (Y \le 1) ~\textbf{do}~ Y := Y + 1 ~\textbf{end} \Downarrow [Y\mapsto0][Y\mapsto1][Y\mapsto2]}
   \end{mathpar}
 \end{center}
 
@@ -259,9 +298,27 @@ The program does not terminate.
         \infrule[E-CmpF]
         {\sigma, \text{\lstinline|a|}_1 \Downarrow_A \text{\lstinline|m|}
           \andalso \sigma, \text{\lstinline|a|}_2 \Downarrow_A \text{\lstinline|n|}
-          \andalso m \neq n}
-        {\sigma, \text{\lstinline|a|}_1 \text{\lstinline|= a|}_2  \Downarrow_B \text{\lstinline|true|}}
-      \end{minipage} \\\\\hline\\
+          \andalso \text{\lstinline|m|} \neq \text{\lstinline|n|}}
+        {\sigma, \text{\lstinline|a|}_1 \text{\lstinline|= a|}_2  \Downarrow_B \text{\lstinline|false|}}
+      \end{minipage} \\\\
+    \begin{minipage}{.4\linewidth}
+      \infrule[E-LeT]
+      {\sigma, \text{\lstinline|a|}_1 \Downarrow_A \text{\lstinline|m|}
+        \andalso \sigma, \text{\lstinline|a|}_2 \Downarrow_A
+        \text{\lstinline|n|}
+        \andalso \text{\lstinline|m|} \le \text{\lstinline|n|}}
+      {\sigma, \text{\lstinline|a|}_1 \text{\lstinline|<= a|}_2  \Downarrow_B \text{\lstinline|true|}}
+    \end{minipage} &
+        \begin{minipage}{.4\linewidth}
+        \infrule[E-LeF]
+        {\sigma, \text{\lstinline|a|}_1 \Downarrow_A \text{\lstinline|m|}
+          \andalso \sigma, \text{\lstinline|a|}_2 \Downarrow_A \text{\lstinline|n|}
+          \andalso \text{\lstinline|n|} < \text{\lstinline|m|}}
+        {\sigma, \text{\lstinline|a|}_1 \text{\lstinline|<= a|}_2  \Downarrow_B \text{\lstinline|false|}}
+      \end{minipage} \\\\
+
+
+    \hline\\
 
   \begin{minipage}{.4\linewidth}
   \infrule[E-Skip]
