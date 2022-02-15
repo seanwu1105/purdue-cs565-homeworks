@@ -684,8 +684,9 @@ Module ISASemantics.
       Instr_evalR ms i ms2 ->
       ms1 = ms2.
   Proof.
-    (* FILL IN HERE *)
-  Admitted.
+    intros.
+    induction H; inversion H0; subst; reflexivity.
+  Qed.
 
   (** Exercise: 2 point (BasicBlock_step_deterministic) *)
   (* Prove that the single step evaluation of basic blocks is deterministic: *)
@@ -695,8 +696,28 @@ Module ISASemantics.
       BasicBlock_step p ms b ms2 b2 ->
       ms1 = ms2 /\ b1 = b2.
   Proof.
-    (* FILL IN HERE *)
-  Admitted.
+    intros.
+    - generalize dependent ms2.
+      induction H.
+    -- intros.
+       inversion H0.
+       subst.
+       apply Instr_evalR_deterministic with (ms1:=ms2) in H.
+    --- rewrite H. split; reflexivity.
+    --- assumption.
+    -- intros.
+       inversion H1; subst; split.
+    --- reflexivity.
+    --- rewrite <- H. rewrite <- H9. reflexivity.
+    --- rewrite H0 in H10. discriminate H10.
+    --- rewrite H0 in H10. discriminate H10.
+    -- intros.
+       inversion H1; subst; split.
+    --- rewrite H0 in H10. discriminate H10.
+    --- rewrite H0 in H10. discriminate H10.
+    --- reflexivity.
+    --- rewrite <- H. rewrite <- H9. reflexivity.  
+  Qed.
 
   (** Exercise: 1 point (BB_value) *)
   (* Define a inductive proposition capturing when an basic block is a
