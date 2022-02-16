@@ -749,20 +749,18 @@ Module ISASemantics.
     exists b : BasicBlock, ~ BasicBlock_value st b /\ normal_form EmptyProgram st b.
   Proof.
     intros.
-    exists (Block "Entry" [] (Name "Entry") (Name "Entry")).
+    exists (Block "Entry" [cmp (imm 0) (imm 1)] Exit Exit).
+    unfold not.
     split.
-    - unfold not.
-      intros.
-      inversion H.
+    - intros. inversion H.
     - unfold normal_form.
       unfold not.
       intros [].
       destruct H.
-      remember (Block "Entry" [] (Name "Entry") (Name "Entry")).
-      inversion H; subst.
-    -- discriminate H3.
-    -- injection H4. intros. subst.
-  Admitted.
+      inversion H.
+      subst.
+      inversion H9.
+  Qed.
 
   (* As we will discuss in a couple of weeks, we can use type systems
      to ensure that these two notions do align for well-typed
