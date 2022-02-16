@@ -614,18 +614,18 @@ Module ISASemantics.
   Inductive BasicBlock_step : Program ->
                               MachineState -> BasicBlock ->
                               MachineState -> BasicBlock -> Prop :=
-  | E_EvalBlock :
+  | BB_step_eval :
       forall p ms ms' ID i body NextBlockT NextBlockF,
       Instr_evalR ms i ms' ->
       BasicBlock_step p ms (Block ID (i :: body) NextBlockT NextBlockF)
                           ms' (Block ID body NextBlockT NextBlockF)
-  | E_NextBlockT :
+  | BB_next_t :
       forall p ms ID NextID body NextBlockF NextBlockT' NextBlockF',
       p NextID = (Block NextID body NextBlockT' NextBlockF') ->
       getFlag ms = true ->
       BasicBlock_step p ms (Block ID [ ] (Name NextID) NextBlockF)
                         ms (Block NextID body NextBlockT' NextBlockF')
-  | E_NextBlockF :
+  | BB_next_f :
       forall p ms ID NextID body NextBlockT NextBlockT' NextBlockF',
       p NextID = (Block NextID body NextBlockT' NextBlockF') ->
       getFlag ms = false ->
@@ -665,14 +665,14 @@ Module ISASemantics.
                                     [mov (reg ax) (reg cx);
                                      mov (reg dx) (reg ax)]
                                     Exit Exit)).
-    - apply E_EvalBlock. apply E_MovRegReg.
+    - apply BB_step_eval. apply E_MovRegReg.
     - apply BB_multi_trans with (st2:=(MState a a c f m))
                               (b2:=(Block "Entry" [mov (reg dx) (reg ax)]
                                     Exit Exit)).
-    -- apply E_EvalBlock. apply E_MovRegReg.
+    -- apply BB_step_eval. apply E_MovRegReg.
     -- apply BB_multi_trans with (st2:=(MState c a c f m))
                               (b2:=(Block "Entry" [] Exit Exit)).
-    --- apply E_EvalBlock. apply E_MovRegReg.
+    --- apply BB_step_eval. apply E_MovRegReg.
     --- apply BB_multi_refl.
   Qed.
 
@@ -724,7 +724,10 @@ Module ISASemantics.
   *value*, i.e. it has hit a jump to the EXIT token and is thus done
   evaluating. *)
   Inductive BasicBlock_value : MachineState -> BasicBlock -> Prop :=
-  (* FILL IN YOUR RULES HERE: *) .
+  | BB_exit_t : forall ms ID NextBlockF,
+      getFlag ms = true -> BasicBlock_value ms (Block ID [ ] Exit NextBlockF)
+  | BB_exit_f : forall ms ID NextBlockT,
+      getFlag ms = false -> BasicBlock_value ms (Block ID [ ] NextBlockT Exit).
 
   (* Recall that we can also define a more /semantic/ notion of when a
      program is done evaluting using the evaluation relation for basic
