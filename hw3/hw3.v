@@ -618,7 +618,7 @@ Module ISASemantics.
       forall p ms ms' ID i body NextBlockT NextBlockF,
       Instr_evalR ms i ms' ->
       BasicBlock_step p ms (Block ID (i :: body) NextBlockT NextBlockF)
-                          ms' (Block ID body NextBlockT NextBlockF)
+                        ms' (Block ID body NextBlockT NextBlockF)
   | BB_next_t :
       forall p ms ID NextID body NextBlockF NextBlockT' NextBlockF',
       p NextID = (Block NextID body NextBlockT' NextBlockF') ->
@@ -748,7 +748,20 @@ Module ISASemantics.
     forall (st : MachineState),
     exists b : BasicBlock, ~ BasicBlock_value st b /\ normal_form EmptyProgram st b.
   Proof.
-    (* FILL IN HERE *)
+    intros.
+    exists (Block "Entry" [] (Name "Entry") (Name "Entry")).
+    split.
+    - unfold not.
+      intros.
+      inversion H.
+    - unfold normal_form.
+      unfold not.
+      intros [].
+      destruct H.
+      remember (Block "Entry" [] (Name "Entry") (Name "Entry")).
+      inversion H; subst.
+    -- discriminate H3.
+    -- injection H4. intros. subst.
   Admitted.
 
   (* As we will discuss in a couple of weeks, we can use type systems
