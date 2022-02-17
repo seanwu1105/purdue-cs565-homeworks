@@ -600,13 +600,13 @@ Module ISASemantics.
   (*  ms =[i]=> ms'
       =================================================================
       p |- ms, (Block ID (i :: body) NextBlockT NextBlockF) -->
-           ms', (Block ID body NextBlockT NextBlockF) *)
+           ms, (Block ID body NextBlockT NextBlockF) *)
 
   (*  p NextBlockT = (Block NextBlockT body NextBlockT' NextBlockF')
       getFlag ms = true
       =================================================================
       p |- ms, (Block ID [ ] NextBlockT NextBlockF) -->
-           ms', (Block ID body NextBlockT' NextBlockF') *)
+           ms, (Block ID body NextBlockT' NextBlockF') *)
 
   (* Encode these rules as the following inductive proposition, and
      add a third rule to cover the case when the conditional flag is
