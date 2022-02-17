@@ -697,26 +697,26 @@ Module ISASemantics.
       ms1 = ms2 /\ b1 = b2.
   Proof.
     intros.
-    - generalize dependent ms2.
-      induction H.
-    -- intros.
+    generalize dependent ms2.
+    induction H.
+    - intros.
        inversion H0.
        subst.
        apply Instr_evalR_deterministic with (ms1:=ms2) in H.
-    --- rewrite H. split; reflexivity.
-    --- assumption.
-    -- intros.
+    -- rewrite H. split; reflexivity.
+    -- assumption.
+    - intros.
        inversion H1; subst; split.
-    --- reflexivity.
-    --- rewrite <- H. rewrite <- H9. reflexivity.
-    --- rewrite H0 in H10. discriminate H10.
-    --- rewrite H0 in H10. discriminate H10.
-    -- intros.
+    -- reflexivity.
+    -- rewrite <- H. rewrite <- H9. reflexivity.
+    -- rewrite H0 in H10. discriminate H10.
+    -- rewrite H0 in H10. discriminate H10.
+    - intros.
        inversion H1; subst; split.
-    --- rewrite H0 in H10. discriminate H10.
-    --- rewrite H0 in H10. discriminate H10.
-    --- reflexivity.
-    --- rewrite <- H. rewrite <- H9. reflexivity.  
+    -- rewrite H0 in H10. discriminate H10.
+    -- rewrite H0 in H10. discriminate H10.
+    -- reflexivity.
+    -- rewrite <- H. rewrite <- H9. reflexivity.  
   Qed.
 
   (** Exercise: 1 point (BB_value) *)
