@@ -122,5 +122,7 @@ Makefile.coq.conf
 
 lf/
 lf.tgz
+plf/
+plf.tgz
 
 try/

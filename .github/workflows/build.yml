@@ -27,7 +27,7 @@ jobs:
         run: sudo snap install coq-prover
 
       - name: Compile LF
-        run: ./build-lf.sh
+        run: ./build-dep.sh
 
       - name: Test assignment
         working-directory: ./hw2
@@ -43,7 +43,7 @@ jobs:
         run: sudo snap install coq-prover
 
       - name: Compile LF
-        run: ./build-lf.sh
+        run: ./build-dep.sh
 
       - name: Test assignment
         working-directory: ./hw3
