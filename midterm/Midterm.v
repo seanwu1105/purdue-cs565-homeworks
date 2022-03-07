@@ -339,7 +339,14 @@ Qed.
  *)
 
 Fixpoint b_opt (a_opt : aexp -> aexp) (b : bexp) : bexp :=
-  b (* REPLACE THIS LINE WITH YOUR DEFINITION *) .
+  match b with
+  | BTrue => BTrue
+  | BFalse => BFalse
+  | BEq aexp1 aexp2 => BEq (a_opt aexp1) (a_opt aexp2)
+  | BLe aexp1 aexp2 => BLe (a_opt aexp1) (a_opt aexp2)
+  | BNot bexp => BNot (b_opt a_opt bexp)
+  | BAnd bexp1 bexp2 => BAnd (b_opt a_opt bexp1) (b_opt a_opt bexp2)
+  end.
 
 (* Question 11 [b_opt_sound] (4 points):
 
@@ -352,20 +359,34 @@ Lemma b_opt_sound
     forall (b : bexp) (st : state),
       beval st (b_opt a_opt b) = beval st b.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  intros.
+  induction b; simpl.
+  - reflexivity.
+  - reflexivity.
+  - repeat rewrite H. reflexivity.
+  - repeat rewrite H. reflexivity.
+  - rewrite IHb. reflexivity.
+  - rewrite IHb1. rewrite IHb2. reflexivity.
+Qed.
 
 (* Question 12 [insert] (2 points):
 
    Define an ordered insertion function on polymorphic lists. *)
 Fixpoint insert {X} (leb : X -> X -> bool) (x : X) (l : list X) : list X :=
-  l (* REPLACE THIS LINE WITH YOUR DEFINITION *).
+  match l with
+  | [] => [x]
+  | h :: t => if leb x h then x :: h :: t
+              else h :: insert leb x t
+  end.
 
 (* Question 13 [insert_sort] (2 points):
 
    Use [insert] to implement insertion sort for polymorphic lists. *)
 Fixpoint insert_sort {X} (leb : X -> X -> bool) (l : list X) : list X :=
-  l (* REPLACE THIS LINE WITH YOUR DEFINITION *) .
+  match l with
+  | [] => []
+  | h :: t => insert leb h (insert_sort leb t)
+  end.
 
 (* Question 14 [insert_sort_test] (1 point):
 
@@ -374,18 +395,18 @@ the following test cases. *)
 
 Example insert_sort_test_1 : insert_sort leb [1; 4; 6; 8] = [1; 4; 6; 8].
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  reflexivity.
+Qed.
 
 Example insert_sort_test_2 : insert_sort leb [1; 8; 6; 4] = [1; 4; 6; 8].
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  reflexivity.
+Qed.
 
 Example insert_sort_test_3 : insert_sort leb [8; 8; 3; 4] = [3; 4; 8; 8].
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  reflexivity.
+Qed.
 
 Inductive SortedList {X} (le : X -> X -> Prop) : list X -> Prop :=
 | Sorted_nil : SortedList le [ ]
@@ -411,8 +432,27 @@ Lemma insert_correct {X}
     forall x l, SortedList le l ->
                 SortedList le (insert leb x l).
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  intros.
+  induction l.
+  - constructor.
+  - simpl.
+    destruct (leb x a) eqn:cond.
+  -- constructor.
+  --- apply H in cond. assumption.
+  --- assumption.
+  -- inversion H1; subst; simpl.
+  --- constructor.
+  ---- apply H0 in cond. apply H in cond. assumption.
+  ---- constructor.
+  --- simpl in IHl.
+      destruct (leb x x') eqn:cond1.
+  ---- constructor.
+  ----- apply H0 in cond. apply H in cond. assumption.
+  ----- apply IHl. apply H5.
+  ---- constructor.
+  ----- assumption.
+  ----- apply IHl. assumption. 
+Qed.
 
 (* Question 15 [insert_sort_correct] (2 points):
 
@@ -429,8 +469,11 @@ Lemma insert_sort_correct {X}
     (forall x x', leb x x' = false -> leb x' x = true) ->
     forall l, SortedList le (insert_sort leb l).
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  intros.
+  induction l.
+  - constructor.
+  - simpl. apply insert_correct; assumption.
+Qed.
 
 (*********************************************************
   Part 5: Big-Step Operational Semantics   (16 points)
