@@ -92,7 +92,7 @@ From PLF Require Import Maps.
 
 From Coq Require Import Lists.List.
 From Coq Require Import Strings.String.
-From Coq Require Import Omega.
+From Coq Require Import Lia.
 From Coq Require Import Sorting.Permutation.
 Import ListNotations.
 
@@ -326,17 +326,17 @@ Fixpoint insert_sort {X} (leb : X -> X -> bool) (l : list X) : list X :=
 Prove that your implementation of [insert_sort] behaves as expected on
 the following test cases. *)
 
-Example insert_sort_test_1 : insert_sort leb [1; 4; 6; 8] = [1; 4; 6; 8].
+Example insert_sort_test_1 : insert_sort Nat.leb [1; 4; 6; 8] = [1; 4; 6; 8].
 Proof.
   (* FILL IN HERE *)
 Admitted.
 
-Example insert_sort_test_2 : insert_sort leb [1; 8; 6; 4] = [1; 4; 6; 8].
+Example insert_sort_test_2 : insert_sort Nat.leb [1; 8; 6; 4] = [1; 4; 6; 8].
 Proof.
   (* FILL IN HERE *)
 Admitted.
 
-Example insert_sort_test_3 : insert_sort leb [8; 8; 3; 4] = [3; 4; 8; 8].
+Example insert_sort_test_3 : insert_sort Nat.leb [8; 8; 3; 4] = [3; 4; 8; 8].
 Proof.
   (* FILL IN HERE *)
 Admitted.
