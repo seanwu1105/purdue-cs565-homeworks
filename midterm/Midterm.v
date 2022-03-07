@@ -599,8 +599,15 @@ Inductive cReval : comR -> state -> state -> Prop :=
       st  CR=[ c ]=> st' ->
       st' CR=[ while b do c end ]=> st'' ->
       st  CR=[ while b do c end ]=> st''
-
-(* FILL IN HERE *)
+  | ER_RepeatTrue : forall st st' b c,
+      st CR=[ c ]=> st' ->
+      beval st' b = true ->
+      st CR=[ repeat c until b end ]=> st'
+  | ER_RepeatFalse : forall st st' st'' b c,
+      st CR=[ c ]=> st' ->
+      beval st' b = false ->
+      st' CR=[ repeat c until b end ]=> st'' ->
+      st  CR=[ repeat c until b end ]=> st''
 
   where "st CR=[ c ]=> st'" := (cReval c st st').
 
@@ -614,10 +621,8 @@ Ltac next_step :=
         | eapply ER_IfFalse; [reflexivity | | ]
         | eapply ER_WhileFalse; [reflexivity | ]
         | eapply ER_WhileTrue; [reflexivity | | ]
-        (* UNCOMMENT THESE LINES AFTER COMPLETING QUESTION 15.
-           YOU MAY ADJUST THE NAME ER_RepeatTrue and ER_RepeatFalse to reflect your cReval definition. *)
-        (* | eapply ER_RepeatTrue; [ | reflexivity | ]
-           | eapply ER_RepeatFalse; [ | reflexivity | ] *)
+        | eapply ER_RepeatTrue; [ | reflexivity | ]
+        | eapply ER_RepeatFalse; [ | reflexivity | ]
         ].
 
 (* Question 16 [no_repeat_test] (1 point):
@@ -631,8 +636,16 @@ Lemma no_repeat_test :
     (st CR=[no_repeat_example]=> st')
     /\ st' X = 1.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  intros.
+  exists (X !-> 1; X !-> 0; st).
+  split.
+  - next_step.
+  -- next_step.
+  -- apply ER_RepeatTrue.
+  --- next_step.
+  --- reflexivity.
+  - apply t_update_eq.
+Qed.
 
 (* Question 17 [div_by_two_test] (1 point):
 
@@ -644,8 +657,35 @@ Lemma div_by_two_test :
       (Y !-> 8; X !-> 0; st) CR=[div_by_two_example]=> st' /\
                                                   st' Y = 0 /\ st' X = 4.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  intros.
+  exists (Y !-> 0; X !-> 4; Y !-> 2; X !-> 3; Y !-> 4; X !-> 2; Y !-> 6; X !-> 1; X !-> 0; Y !-> 8; X !-> 0; st).
+  split.
+  - next_step.
+  -- next_step.
+  -- simpl. eapply ER_RepeatFalse.
+  --- next_step.
+  ---- next_step.
+  ---- simpl. next_step.
+  --- simpl. reflexivity.
+  --- simpl. eapply ER_RepeatFalse.
+  ---- next_step.
+  ----- next_step.
+  ----- simpl. next_step.
+  ---- simpl. reflexivity.
+  ---- simpl. eapply ER_RepeatFalse.
+  ----- next_step.
+  ------ next_step.
+  ------ simpl. next_step.
+  ----- simpl. reflexivity.
+  ----- simpl. eapply ER_RepeatTrue.
+  ------ next_step.
+  ------- next_step.
+  ------- simpl. next_step.
+  ------ unfold t_update. simpl. reflexivity.
+  - split.
+  -- apply t_update_eq.
+  -- unfold t_update. simpl. reflexivity. 
+Qed.
 
 (* Question 18 [comRTocom] (4 points):
 
@@ -656,8 +696,17 @@ Admitted.
    Define a translation function that converts Imp+Repeat programs to
    vanilla Imp programs. *)
 
+Print com.
+
 Fixpoint comRTocom (c : comR) : com :=
-  <{skip}> (* REPLACE THIS LINE WITH YOUR DEFINITION *).
+  match c with
+  | CRSkip => CSkip
+  | CRAss x a => CAsgn x a
+  | CRSeq c1 c2 => CSeq (comRTocom c1) (comRTocom c2)
+  | CRIf b c1 c2 => CIf b (comRTocom c1) (comRTocom c2)
+  | CRWhile b c => CWhile b (comRTocom c)
+  | CRRepeat c b => CSeq (comRTocom c) (CWhile (BNot b) (comRTocom c))
+  end.
 
 (* Question 19 [comRTocom] (6 points):
 
@@ -666,8 +715,25 @@ Lemma comRToCom_correct :
   forall c st st',
     st CR=[c]=> st' -> st =[comRTocom c]=> st'.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  intros.
+  induction H; simpl.
+  - constructor.
+  - constructor. assumption.
+  - apply E_Seq with (st':=st'); assumption.
+  - apply E_IfTrue; assumption.
+  - apply E_IfFalse; assumption.
+  - apply E_WhileFalse; assumption.
+  - apply E_WhileTrue with (st':=st'); assumption.
+  - apply E_Seq with (st':=st').
+  -- assumption.
+  -- apply E_WhileFalse. simpl. rewrite H0. reflexivity.
+  - apply E_Seq with (st':=st').
+  -- assumption.
+  -- inversion IHcReval2. subst. apply E_WhileTrue with (st':=st'0).
+  --- simpl. rewrite H0. reflexivity.
+  --- assumption.
+  --- assumption.
+Qed.
 
 End IMPRepeat.
 
