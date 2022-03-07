@@ -3,7 +3,7 @@
 
 (*****************************************************************
 
-    Your Name: *FILL IN HERE*
+    Your Name: Shuang Wu
 
  *****************************************************************
 
@@ -136,7 +136,12 @@ Example tree_1 := node leaf 2 (node (node leaf 6 leaf) 1
 
    Note: the tree need not be sorted. *)
 Fixpoint rangeSearch (t : NatTree) (l u : nat) : list nat :=
-[ ] (* REPLACE THIS LINE WITH YOUR DEFINITION *).
+  match t with
+  | leaf => []
+  | node lt n rt =>
+    if (l <=? n) && (n <=? u) then n :: rangeSearch rt l u ++ rangeSearch lt l u
+    else rangeSearch rt l u ++ rangeSearch lt l u
+  end.
 
 (* Question 2 [rangeSearch_tests] (1 point):
 
@@ -151,23 +156,23 @@ Fixpoint rangeSearch (t : NatTree) (l u : nat) : list nat :=
 
   Example rangeSearch_test_1 : Permutation (rangeSearch tree_1 4 8) [6; 6].
   Proof.
-    (* FILL IN HERE *)
-  Admitted.
+    repeat constructor.
+  Qed.
 
   Example rangeSearch_test_2 : Permutation (rangeSearch tree_1 14 18) [].
   Proof.
-    (* FILL IN HERE *)
-  Admitted.
+    repeat constructor.
+  Qed.
 
   Example rangeSearch_test_3 : Permutation (rangeSearch tree_1 2 10) [2; 6; 10; 6].
   Proof.
-    (* FILL IN HERE *)
-  Admitted.
+    repeat constructor.
+  Qed.
 
   Example rangeSearch_test_4 : Permutation (rangeSearch tree_1 10 2) [].
   Proof.
-    (* FILL IN HERE *)
-  Admitted.
+    repeat constructor.
+  Qed.
 
 (*********************************************************
   Part 2: Basic Propositional Reasoning   (4 points)
@@ -178,8 +183,10 @@ Fixpoint rangeSearch (t : NatTree) (l u : nat) : list nat :=
   Prove that a proposition and its negation cannot both hold: *)
 Lemma P_And_Not_P : forall (P : Prop), ~ (P /\ ~ P).
 Proof.
-    (* FILL IN HERE *)
-  Admitted.
+  intros ? [].
+  destruct H0.
+  assumption.
+Qed.
 
 (* Question 4 [And_Distribute_Or] (2 points):
 
@@ -187,8 +194,19 @@ Proof.
   [\/]: *)
 Lemma And_Distribute_Or : forall (P Q R : Prop), (P /\ (Q \/ R)) <-> ( (P /\ Q) \/ (P /\ R)).
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  intros.
+  split.
+  - intros [p [q | r]].
+  -- left. split; assumption.
+  -- right. split; assumption.
+  - intros [[p q] | [p r]].
+  -- split.
+  --- assumption.
+  --- left. assumption.
+  -- split.
+  --- assumption.
+  --- right. assumption.  
+Qed.
 
 (*********************************************************
   Part 3: Inductive Propositions   (13 points)
