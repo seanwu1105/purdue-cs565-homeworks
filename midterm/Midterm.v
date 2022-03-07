@@ -225,7 +225,9 @@ Qed.
   Write an inductive proposition that captures when a (polymorphic)
   list is a subsequence of another list: *)
 Inductive Subsequence {X : Type} : list X -> list X -> Prop :=
-  (* FILL IN HERE *).
+| Subsequence_empty : forall l, Subsequence nil l
+| Subsequence_all_hd : forall x l1 l2, Subsequence l1 l2 -> Subsequence (x :: l1) (x :: l2)
+| Subsequence_l2_hd : forall x l1 l2, Subsequence l1 l2 -> Subsequence l1 (x :: l2).
 
 Open Scope string_scope.
 
@@ -234,44 +236,55 @@ Open Scope string_scope.
    Validate your definition of [Subsequence] by proving the following five facts: *)
 Example Subsequence_test_1 : Subsequence ["e"; "x"; "m"] ["e"; "x"; "a"; "m"].
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  repeat constructor.
+Qed.
 
 Example Subsequence_test_2 : Subsequence [2; 6] [1; 2; 15; 6; 15; 34].
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  repeat constructor.
+Qed.
 
 Example Subsequence_test_3 : Subsequence [ ] ["e"; "x"; "a"; "m"].
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  repeat constructor.
+Qed.
 
 Example Subsequence_test_4 : Subsequence ["e"; "x"; "a" ] ["e"; "x"; "a"; "m"].
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  repeat constructor.
+Qed.
 
 Example Subsequence_test_5 : Subsequence ["e"; "x"; "a"; "m"] ["e"; "x"; "a"; "m"].
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  repeat constructor.
+Qed.
 
 (* Optional Exercise: This should also be true, but you are not
    required to prove it.  (If you choose to do so, the [inversion]
    tactic will be quite useful. *)
 Example Subsequence_test_6 : ~ Subsequence ["a"; "x"] ["e"; "x"; "a"; "m"].
 Proof.
-  (* OPTIONALLY FILL IN HERE *)
-Admitted.
+  unfold not.
+  intros. 
+  inversion H. subst.
+  inversion H2. subst.
+  inversion H3; subst.
+  - inversion H1. subst.
+    inversion H5.
+  - inversion H4. subst.
+    inversion H5. 
+Qed.
 
 (* Question 7 [Subsequence_refl] (2 points):
 
    Prove that [Subsequence] is a reflexive relation. *)
 Lemma Subsequence_refl {X} : forall (l : list X), Subsequence l l.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  intros.
+  induction l.
+  - constructor.
+  - constructor. assumption. 
+Qed.
 
 (* Question 8 [Subsequence_not_sym] (2 points):
 
@@ -283,8 +296,13 @@ Lemma Subsequence_not_sym :
     Subsequence l1 l2 /\
     ~ Subsequence l2 l1.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  exists [].
+  exists [0].
+  split.
+  - constructor.
+  - intros contra.
+    inversion contra.
+Qed.
 
 (* Question 9 [Subsequence_trans] (4 points):
 
@@ -298,8 +316,14 @@ Lemma Subsequence_trans {X} : forall (l1 l2 l3 : list X),
     Subsequence l2 l3 ->
     Subsequence l1 l3.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  intros.
+  generalize dependent l1.
+  induction H0; intros.
+  - inversion H.
+    constructor.
+  - inversion H; constructor; apply IHSubsequence; assumption.
+  - constructor. apply IHSubsequence. assumption.
+Qed.
 
 (*********************************************************
   Part 4: Polymorphic + Higher-Order Functions  (14 points)
