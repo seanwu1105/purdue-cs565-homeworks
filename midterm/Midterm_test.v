@@ -62,7 +62,7 @@ Goal True.
   exc "#Subsequence_tests".
   pt 1.
   check_type @Midterm.Subsequence_test_1 ((Midterm.Subsequence ("e" :: "x" :: "m" :: nil) ("e" :: "x" :: "a" :: "m" :: nil))).
-  check_type @Midterm.Subsequence_test_2 ((Midterm.Subsequence ("x" :: "m" :: nil) ("e" :: "x" :: "a" :: "m" :: nil))).
+  check_type @Midterm.Subsequence_test_2 ((Midterm.Subsequence (2 :: 6 :: nil) (1 :: 2 :: 15 :: 6 :: 15 :: 34 :: nil))).
   check_type @Midterm.Subsequence_test_3 ((Midterm.Subsequence nil ("e" :: "x" :: "a" :: "m" :: nil))).
   check_type @Midterm.Subsequence_test_4 ((Midterm.Subsequence ("e" :: "x" :: "a" :: nil) ("e" :: "x" :: "a" :: "m" :: nil))).
   check_type @Midterm.Subsequence_test_5 ((Midterm.Subsequence ("e" :: "x" :: "a" :: "m" :: nil) ("e" :: "x" :: "a" :: "m" :: nil))).

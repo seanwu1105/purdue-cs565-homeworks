@@ -1,5 +1,5 @@
-(*** CS 565 Midterm Exam -- Week of October 12, 2020 ***)
-(** !!! Due date: 10/16/2020 by 6:00PM !!! **)
+(*** CS 565 Midterm Exam -- Week of March 7, 2022 ***)
+(** !!! Due date: 03/11/2022 by 6:00PM !!! **)
 
 (*****************************************************************
 
@@ -10,8 +10,8 @@
   Before working on this file, open '_CoqProject' file in the same
   directory and replace the line '-R ../plf PLF' with
   '-R /path/to/your/programming/language/foundations/directory PLF',
-  similar to how you did it in previous homework. Compile your
-  [Stlc.v] in PLF first.
+  similar to whay you did on previous homeworks. Make sure you have
+  run make in your PLF directory before beginning.
 
   There are 24 questions and one bonus question below; please fill in
   all the places that say *FILL IN HERE*. There are 75 points
@@ -25,7 +25,7 @@
 
   Note that the standard late policy does not apply here. If you
   encounter a problem that could cause you to not submit the midterm
-  before the deadline of 6:00PM on 10/16/2020, let the professor and
+  before the deadline of 6:00PM on 03/11/2022, let the professor and
   the TA know IMMEDIATELY!
 
   You are allowed to use all theorems and exercises in 'Software
@@ -93,8 +93,12 @@ From PLF Require Import Maps.
 From Coq Require Import Lists.List.
 From Coq Require Import Strings.String.
 From Coq Require Import Lia.
+From Coq Require Import Arith.
 From Coq Require Import Sorting.Permutation.
 Import ListNotations.
+
+Open Scope nat_scope.
+Open Scope bool_scope.
 
 (*********************************************************
   Part 1: Basic Functional Programming    (3 points)
@@ -215,7 +219,7 @@ Proof.
   (* FILL IN HERE *)
 Admitted.
 
-Example Subsequence_test_2 : Subsequence ["x"; "m"] ["e"; "x"; "a"; "m"].
+Example Subsequence_test_2 : Subsequence [2; 6] [1; 2; 15; 6; 15; 34].
 Proof.
   (* FILL IN HERE *)
 Admitted.
@@ -326,17 +330,17 @@ Fixpoint insert_sort {X} (leb : X -> X -> bool) (l : list X) : list X :=
 Prove that your implementation of [insert_sort] behaves as expected on
 the following test cases. *)
 
-Example insert_sort_test_1 : insert_sort Nat.leb [1; 4; 6; 8] = [1; 4; 6; 8].
+Example insert_sort_test_1 : insert_sort leb [1; 4; 6; 8] = [1; 4; 6; 8].
 Proof.
   (* FILL IN HERE *)
 Admitted.
 
-Example insert_sort_test_2 : insert_sort Nat.leb [1; 8; 6; 4] = [1; 4; 6; 8].
+Example insert_sort_test_2 : insert_sort leb [1; 8; 6; 4] = [1; 4; 6; 8].
 Proof.
   (* FILL IN HERE *)
 Admitted.
 
-Example insert_sort_test_3 : insert_sort Nat.leb [8; 8; 3; 4] = [3; 4; 8; 8].
+Example insert_sort_test_3 : insert_sort leb [8; 8; 3; 4] = [3; 4; 8; 8].
 Proof.
   (* FILL IN HERE *)
 Admitted.
