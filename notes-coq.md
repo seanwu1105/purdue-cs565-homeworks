@@ -1,4 +1,4 @@
-# Notes
+# Notes - Coq
 
 ## Algebraic Data Type
 
