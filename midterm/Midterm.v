@@ -644,7 +644,7 @@ Proof.
   -- apply ER_RepeatTrue.
   --- next_step.
   --- reflexivity.
-  - apply t_update_eq.
+  - unfold t_update. reflexivity.
 Qed.
 
 (* Question 17 [div_by_two_test] (1 point):
@@ -658,33 +658,32 @@ Lemma div_by_two_test :
                                                   st' Y = 0 /\ st' X = 4.
 Proof.
   intros.
-  exists (Y !-> 0; X !-> 4; Y !-> 2; X !-> 3; Y !-> 4; X !-> 2; Y !-> 6; X !-> 1; X !-> 0; Y !-> 8; X !-> 0; st).
+  exists (Y !-> 0; X !-> 4; Y !-> 2; X !-> 3; Y !-> 4; X !-> 2;
+          Y !-> 6; X !-> 1; X !-> 0; Y !-> 8; X !-> 0; st).
   split.
   - next_step.
   -- next_step.
   -- simpl. eapply ER_RepeatFalse.
   --- next_step.
   ---- next_step.
-  ---- simpl. next_step.
-  --- simpl. reflexivity.
+  ---- next_step.
+  --- reflexivity.
   --- simpl. eapply ER_RepeatFalse.
   ---- next_step.
   ----- next_step.
-  ----- simpl. next_step.
-  ---- simpl. reflexivity.
+  ----- next_step.
+  ---- reflexivity.
   ---- simpl. eapply ER_RepeatFalse.
   ----- next_step.
   ------ next_step.
-  ------ simpl. next_step.
-  ----- simpl. reflexivity.
+  ------ next_step.
+  ----- reflexivity.
   ----- simpl. eapply ER_RepeatTrue.
   ------ next_step.
   ------- next_step.
-  ------- simpl. next_step.
-  ------ unfold t_update. simpl. reflexivity.
-  - split.
-  -- apply t_update_eq.
-  -- unfold t_update. simpl. reflexivity. 
+  ------- next_step.
+  ------ unfold t_update. reflexivity.
+  - split; unfold t_update; reflexivity. 
 Qed.
 
 (* Question 18 [comRTocom] (4 points):
@@ -792,7 +791,9 @@ Module LCPairsBool.
   | tm_true  : tm
   | tm_false : tm
   | tm_ite   : tm -> tm -> tm -> tm
-  (* FILL IN HERE *).
+  | tm_pair  : tm -> tm -> tm
+  | tm_fst   : tm -> tm
+  | tm_snd   : tm -> tm.
 
 Declare Custom Entry stlc.
 Notation "<<{ e }>>" := e (e custom stlc at level 99).
@@ -807,10 +808,9 @@ Notation "'if' x 'then' y 'else' z" :=
                     left associativity).
 Notation "'true'"  := tm_true (in custom stlc at level 0).
 Notation "'false'"  := tm_false (in custom stlc at level 0).
-(* UNCOMMENT THESE LINES AFTER COMPLETING QUESTION 20.
 Notation "'fst' tm"  := (tm_fst tm) (in custom stlc at level 0).
 Notation "'snd' tm"  := (tm_snd tm) (in custom stlc at level 0).
-Notation "'<' tm1 ',' tm2 '>'" := (tm_pair tm1 tm2) (in custom stlc at level 0). *)
+Notation "'<' tm1 ',' tm2 '>'" := (tm_pair tm1 tm2) (in custom stlc at level 0).
 
 Notation "\ x , y" :=
   (tm_abs x y) (in custom stlc at level 90, x at level 99,
@@ -836,7 +836,7 @@ Hint Unfold s : core.
 (* Here are lambda expressions for logical negation and swapping the
    elements of a pair *)
 Definition notB : tm := <<{\x, if x then false else true}>>.
-(* Definition swap : tm := <<{\x, <snd x, fst x> }>>. *)
+Definition swap : tm := <<{\x, <snd x, fst x> }>>.
 
 (* Question 21 [and2B, or2B, not2B] (3 points):
 
@@ -844,13 +844,15 @@ Definition notB : tm := <<{\x, if x then false else true}>>.
    and bitwise negation of a pair of booleans (i.e. a 2-bit vector).  *)
 
 Definition not2B : tm :=
-<<{x}>> (* REPLACE THIS LINE WITH YOUR DEFINITION *).
+<<{\x, <notB fst x, notB snd x> }>>.
 
 Definition and2B : tm :=
-  <<{x}>> (* REPLACE THIS LINE WITH YOUR DEFINITION *).
+  <<{\x, \y, <if fst x then if fst y then true else false else false,
+              if snd x then if snd y then true else false else false>}>>.
 
 Definition or2B : tm :=
-  <<{x}>> (* REPLACE THIS LINE WITH YOUR DEFINITION *).
+  <<{\x, \y, <if fst x then true else if fst y then true else false,
+              if snd x then true else if snd y then true else false>}>>.
 
 (* ================================================================= *)
 (** ** Substitution *)
@@ -861,7 +863,20 @@ Reserved Notation "'[' x ':=' s ']' t" (in custom stlc at level 20, x constr).
 
    Update the substitution function in [Stlc.v] to handle pairs *)
 Fixpoint subst (x : string) (s : tm) (t : tm) : tm :=
-  t (* REPLACE THIS LINE WITH YOUR DEFINITION *)
+  match t with
+  | tm_var y => if eqb_string x y then s else t
+  | <<{ t1 t2 }>> => <<{ ([ x := s ] t1) ([ x := s ] t2) }>>
+  | <<{ \ y , t1 }>> => if eqb_string x y then t
+                                          else <<{ \ y , [ x := s ] t1 }>>
+  | <<{ true }>> => <<{ true }>>
+  | <<{ false }>> => <<{ false }>>
+  | <<{ if t1 then t2 else t3 }>> => <<{ if ([ x := s ] t1) 
+                                         then ([ x := s ] t2)
+                                         else ([ x := s ] t3) }>>
+  | <<{ < t1 , t2 > }>> => <<{ < ([ x := s ] t1) , ([ x := s ] t2) > }>>
+  | <<{ fst t }>> => <<{ fst ([ x := s ] t) }>>
+  | <<{ snd t }>> => <<{ snd ([ x := s ] t) }>>
+  end
 
 where "'[' x ':=' s ']' t" := (subst x s t) (in custom stlc).
 
@@ -920,8 +935,17 @@ Reserved Notation "t '-->' t'" (at level 40).
    above as an inductive proposition. *)
 
 Inductive step : tm -> tm -> Prop :=
-    (* FILL IN HERE *)
-
+| ST_AppAbs : forall x t1 t2, <<{ (\ x, t1) t2 }>> --> <<{ [ x := t2 ] t1 }>>
+| ST_App1 : forall t1 t1' t2,
+    <<{ t1 }>> --> <<{ t1' }>> -> <<{ t1 t2 }>> --> <<{ t1' t2 }>>
+| ST_If : forall t1 t1' t2 t3,
+    <<{ t1 }>> --> <<{ t1' }>> -> <<{ if t1 then t2 else t3 }>> --> <<{ if t1' then t2 else t3 }>>
+| ST_IfTrue : forall t2 t3, <<{ if true then t2 else t3 }>> --> <<{ t2 }>>
+| ST_IfFalse : forall t2 t3, <<{ if false then t2 else t3 }>> --> <<{ t3 }>>
+| ST_FstPair : forall t1 t2, <<{ fst <t1, t2> }>> --> <<{ t1 }>>
+| ST_SndPair : forall t1 t2, <<{ snd <t1, t2> }>> --> <<{ t2 }>>
+| ST_Fst : forall t1 t1', <<{ t1 }>> --> <<{ t1' }>> -> <<{ fst t1 }>> --> <<{ fst t1' }>>
+| ST_Snd : forall t1 t1', <<{ t1 }>> --> <<{ t1' }>> -> <<{ snd t1 }>> --> <<{ snd t1' }>>
 
 where "t '-->' t'" := (step t t').
 
@@ -944,57 +968,66 @@ Ltac normalize_lambda :=
 Example notB_ex :
   <<{notB true}>> -->* <<{false}>>.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  normalize_lambda.
+  apply multi_refl.
+Qed.
 
 Example not2B_ex_1 :
-  (* REPLACE THIS LINE WITH "<<{fst (not2B <true, false>)}>> -->* <<{false}>>" *) False.
+  <<{fst (not2B <true, false>)}>> -->* <<{false}>>.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  normalize_lambda.
+  apply multi_refl.
+Qed.
 
 Example not2B_ex_2 :
-  (* REPLACE THIS LINE WITH "<<{snd (not2B <true, false>)}>> -->* <<{true}>>" *) False.
+  <<{snd (not2B <true, false>)}>> -->* <<{true}>>.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  normalize_lambda.
+  apply multi_refl.
+Qed.
 
 Example and2b_ex_1 :
-  (* REPLACE THIS LINE WITH "<<{fst (and2B <true, false> <false, true>)}>> -->* <<{false}>>" *) False.
+  <<{fst (and2B <true, false> <false, true>)}>> -->* <<{false}>>.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  normalize_lambda.
+  apply multi_refl.
+Qed.
 
 Example and2b_ex_2 :
-  (* REPLACE THIS LINE WITH "<<{snd (and2B <true, false> <false, true>)}>> -->* <<{false}>>" *) False.
+  <<{snd (and2B <true, false> <false, true>)}>> -->* <<{false}>>.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  normalize_lambda.
+  apply multi_refl.
+Qed.
 
 Example not2b_ex_3 :
-  (* REPLACE THIS LINE WITH "<<{snd (not2B (and2B <true, true> <false, true>))}>> -->* <<{false}>>" *) False.
+  <<{snd (not2B (and2B <true, true> <false, true>))}>> -->* <<{false}>>.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  normalize_lambda.
+  apply multi_refl.
+Qed.
 
 Example or2b_ex_1 :
-  (* REPLACE THESE TWO LINES WITH "<<{fst (and2B (or2B <true, false> <false, true>)
-                 (and2B <true, false> <false, true>))}>> -->* <<{false}>>" *) False.
+  <<{fst (and2B (or2B <true, false> <false, true>)
+                (and2B <true, false> <false, true>))}>> -->* <<{false}>>.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  normalize_lambda.
+  apply multi_refl.
+Qed.
 
 Example or2b_ex_2 :
-  (* REPLACE THIS LINE WITH "<<{snd (or2B <true, false> <false, true>)}>> -->* <<{true}>>" *) False.
+  <<{snd (or2B <true, false> <false, true>)}>> -->* <<{true}>>.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  normalize_lambda.
+  apply multi_refl.
+Qed.
 
 Example or2b_ex_3 :
-  (* REPLACE THESE TWO LINES WITH "<<{snd (and2B (or2B <true, false> <false, true>)
-                 (and2B <true, true> <false, true>))}>> -->* <<{true}>>" *) False.
+  <<{snd (and2B (or2B <true, false> <false, true>)
+         (and2B <true, true> <false, true>))}>> -->* <<{true}>>.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  normalize_lambda.
+  apply multi_refl.
+Qed.
 
 End LCPairsBool.
