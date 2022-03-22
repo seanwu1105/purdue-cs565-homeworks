@@ -64,3 +64,19 @@ jobs:
       - name: Test assignment
         working-directory: ./midterm
         run: make
+
+  hw4:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Setup Coq
+        run: sudo snap install coq-prover
+
+      - name: Compile dependencies
+        run: ./build-dep.sh
+
+      - name: Test assignment
+        working-directory: ./hw4
+        run: make
