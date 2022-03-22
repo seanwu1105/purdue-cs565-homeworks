@@ -1,0 +1,111 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amsthm,amssymb,amsfonts}
+\usepackage{syntax}
+\usepackage{bcprules}
+\usepackage{bm}
+\usepackage{listings}
+\usepackage{wrapfig}
+\newtheorem{theorem}{Theorem}
+\usepackage{hyperref}
+
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\somany}[1]{$\overline{\mathsf{#1}}$}
+
+\newenvironment{problem}[2][Problem]{\begin{trivlist}
+\item[\hskip \labelsep {\bfseries #1}\hskip \labelsep {\bfseries #2.}]}{\end{trivlist}}
+
+\lstset{ %
+  basicstyle=\sf,  %
+  breaklines=true, %
+  columns=fullflexible, %
+  literate={<=}{$\le\;$}{1}
+  {<->}{$\leftrightarrow\;$}{1}
+  {/=>}{$\Downarrow$}{1}
+  {|-}{$\vdash$}{1}
+  {<>}{$\neq\;$}{1}
+  {/\\}{$\;\land\;$}{1},
+  morekeywords={if,
+    while,
+    then,
+    else,
+    do,
+    skip,
+    break
+  }
+}
+
+\begin{document}
+
+\title{CS 565 Spring 2022 Homework 4 (Axiomatic Semantics)}
+\author{Your name: \underline{\hspace{10cm}}}
+\maketitle
+
+\begin{problem}{1 (2 points)}
+Paraprhase each of the following Hoare triples in English.
+
+\begin{itemize}
+\item[a. ]   \lstinline!|- {True} c {X = 5}!
+  \vspace{3cm}
+
+\item[b. ]   \lstinline!|- {100 < Z} c {Z = 100}!
+\vspace{3cm}
+
+\item[c. ]   \lstinline!|- {X <> Y} c {False}!
+\vspace{3cm}
+
+\item[d. ]   \lstinline!|- {True} c {(Z = Y <-> Y < X) /\ (Z = X <-> X <= Y)}!
+  \vspace{3cm}
+
+\end{itemize}
+\end{problem}
+
+\pagebreak
+
+\begin{problem}{2 (1 point)}
+  Here is the proof rule for conditionals we saw in class:
+  \infrule[Hoare-If-Alt]
+  {\vdash \{P \land \lstinline|b|\}~ \text{\lstinline|c|}_1 ~\{Q\}
+    \andalso   \vdash \{P \land \lnot \lstinline|b|\}~ \text{\lstinline|c|}_2 ~\{Q\}
+  }
+  {\vdash \{P \}~ \text{\lstinline|if b then c|}_1~ \text{\lstinline|else c|}_2  ~\{Q\}}
+  \noindent and here is an alternative:
+  \infrule[Hoare-If-Alt$_1$]
+  {\vdash \{P \land \lstinline|b|\}~ \text{\lstinline|c|}_1 ~\{Q\}
+    \andalso   \vdash \{P \land \lnot \lstinline|b|\}~ \text{\lstinline|c|}_2 ~\{Q\}
+  }
+  {\vdash \{P \land \lstinline|b|\}~ \text{\lstinline|if b then c|}_1~ \text{\lstinline|else c|}_2  ~\{Q\}}
+
+  If we replace \textsc{Hoare-If} with \textsc{Hoare-If-Alt$_1$},
+  would the resulting program logic be a) sound and b) complete?
+  If not,  explain why.
+  \end{problem}
+  \vspace{6cm}
+
+  \begin{problem}{3 (1 point)}
+    Now consider this rule:
+  \infrule[Hoare-If-Alt$_2$]
+  {\vdash \{P \land \lstinline|b|\}~ \text{\lstinline|c|}_1 ~\{Q\}
+    \andalso \vdash \{P \land \lnot \lstinline|b|\}~ \text{\lstinline|c|}_2
+    ~\{\lnot Q\}
+  }
+  {\vdash \{P \land \lstinline|b|\}~ \text{\lstinline|if b then c|}_1~ \text{\lstinline|else c|}_2  ~\{Q\}}
+
+  If we instead replaced \textsc{Hoare-If} with \textsc{Hoare-If-Alt$_2$},
+  would the resulting program logic be a) sound and b) complete?
+  If not, explain why.
+  \end{problem}
+\vspace{6cm}
+
+\pagebreak
+
+  \begin{problem}{4 (3 points)}
+    Give a (sound and complete) proof rule for the
+    \lstinline|repeat c until b| command from the third
+    homework\footnote{. \textbf{Hint}: Use the rule for regular loops,
+      \textsc{Hoare-While}, for inspiration.}
+  \end{problem}
+
+\end{document}
