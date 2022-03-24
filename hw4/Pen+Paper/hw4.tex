@@ -40,7 +40,7 @@
 \begin{document}
 
 \title{CS 565 Spring 2022 Homework 4 (Axiomatic Semantics)}
-\author{Your name: \underline{\hspace{10cm}}}
+\author{Your name: \underline{Shuang Wu (wu1716@purdue.edu)}}
 \maketitle
 
 \begin{problem}{1 (2 points)}
@@ -48,16 +48,20 @@ Paraprhase each of the following Hoare triples in English.
 
 \begin{itemize}
 \item[a. ]   \lstinline!|- {True} c {X = 5}!
-  \vspace{3cm}
+
+For any possible initial state, the program c will terminate in a state where X equals to 5.
 
 \item[b. ]   \lstinline!|- {100 < Z} c {Z = 100}!
-\vspace{3cm}
+
+For any initial state where Z is greater than 100, the program c will terminate in a state where Z equals to 100.
 
 \item[c. ]   \lstinline!|- {X <> Y} c {False}!
-\vspace{3cm}
+
+For any initial state where X does not equals to Y, the program c will not terminate.
 
 \item[d. ]   \lstinline!|- {True} c {(Z = Y <-> Y < X) /\ (Z = X <-> X <= Y)}!
-  \vspace{3cm}
+
+For any possible initial state, the program c will terminate in a state satisfies one of the following conditions: (1) Z equals to Y and Y is less than X (2) Z equals to X and X is less or equals to Y.
 
 \end{itemize}
 \end{problem}
@@ -82,7 +86,8 @@ Paraprhase each of the following Hoare triples in English.
   would the resulting program logic be a) sound and b) complete?
   If not,  explain why.
   \end{problem}
-  \vspace{6cm}
+  
+  The resulting program logic with the alternative would be sound but not complete as it would wrongly reject the case when b is false, and thus the program in the else branch will never be accepted and executed.
 
   \begin{problem}{3 (1 point)}
     Now consider this rule:
@@ -97,7 +102,8 @@ Paraprhase each of the following Hoare triples in English.
   would the resulting program logic be a) sound and b) complete?
   If not, explain why.
   \end{problem}
-\vspace{6cm}
+
+  The resulting program logic with the alternative would still be sound as the else branch will not be accepted and executed at all even if the postcondition of the branch is wrong. The logic will not be complete also as it would wrongly reject the case when b is false.
 
 \pagebreak
 
@@ -107,5 +113,11 @@ Paraprhase each of the following Hoare triples in English.
     homework\footnote{. \textbf{Hint}: Use the rule for regular loops,
       \textsc{Hoare-While}, for inspiration.}
   \end{problem}
+  
+  \infrule[Hoare-Repeat]
+  {\vdash \{P\}~ \text{\lstinline|c|} ~\{Q\}
+   \andalso
+   \vdash \{Q \land \lnot \lstinline|b|\}~ \text{\lstinline|c|} ~\{Q\}}
+  {\vdash \{P\}~ \text{\lstinline|repeat c until b|}~\{Q \land \lstinline|b|\}}
 
 \end{document}
