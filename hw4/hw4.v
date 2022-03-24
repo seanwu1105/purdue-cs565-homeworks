@@ -121,8 +121,14 @@ Theorem if_false : forall b c1 c2,
     b ==B <{false}> ->
     <{ if b then c1 else c2 end }> ==C c2.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  split; intros (?, ?) ?.
+  - simpl in H0. In_inversion.
+  -- destruct H. simpl in H. apply H in H0. In_inversion.
+  -- assumption.
+  - simpl. In_intro. right. split.
+  -- destruct H. apply H1. simpl. In_intro.
+  -- assumption. 
+Qed.
 
 (** Exercise: 2 points (swap_if_branches) *)
 (* Show that swapping the branches of an [if] and negating its guard
@@ -130,8 +136,12 @@ Admitted.
 Theorem swap_if_branches : forall b c1 c2,
     <{ if b then c1 else c2 end }> ==C <{ if ~ b then c2 else c1 end }>.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  split; intros (?, ?) ?; simpl in H; In_inversion; simpl in *; In_intro.
+  - right. simpl. split; assumption.
+  - left. simpl. split; assumption.
+  - right. split; assumption.
+  - left. split; assumption.     
+Qed.
 
 
 (** Exercise: 2 points (seq_assoc) *)
@@ -141,8 +151,12 @@ Theorem seq_assoc :
   forall c1 c2 c3,
     <{(c1; c2); c3}> ==C <{c1; (c2; c3)}>.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  split; intros (?, ?) ?; simpl in *; In_inversion; In_intro; exists x0; split.
+  - assumption.
+  - exists x. split; assumption.
+  - exists x. split; assumption.
+  - assumption.  
+Qed.
 
 (* Here is the higher-order boolean expression optimizer from the
    midterm.  It takes an arithmetic expression optimizer [a_opt] and
@@ -173,8 +187,33 @@ Lemma b_opt_sound
     (forall (a : aexp), a ==A a_opt a) ->
     forall (b : bexp), b ==B b_opt a_opt b.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  intros.
+  split; induction b; intros (?, ?) ?.
+  - assumption.
+  - assumption.
+  - apply (beq_eqv_cong a1) with (x:=a2) (y:=a_opt a1) in H; apply H.
+    assumption.
+  - apply (ble_eqv_cong a1) with (x:=a2) (y:=a_opt a1) in H; apply H.
+    assumption.
+  - apply IHb. assumption.
+  - simpl in *. In_inversion. subst. exists x. exists x0. split.
+  -- apply IHb1 in H0. assumption.
+  -- split.
+  --- apply IHb2 in H1. assumption.
+  --- reflexivity.
+  - assumption.
+  - assumption.
+  - apply (beq_eqv_cong a1) with (x:=a2) (y:=a_opt a1) in H; apply H.
+    assumption.
+  - apply (ble_eqv_cong a1) with (x:=a2) (y:=a_opt a1) in H; apply H.
+    assumption.
+  - apply IHb. assumption.
+  - simpl in *. In_inversion. subst. exists x. exists x0. split.
+  -- apply IHb1 in H0. assumption.
+  -- split.
+  --- apply IHb2 in H1. assumption.
+  --- reflexivity.
+Qed.
 
 End DenotationalSemantics.
 
