@@ -155,7 +155,7 @@ Proof.
   - assumption.
   - exists x. split; assumption.
   - exists x. split; assumption.
-  - assumption.  
+  - assumption.
 Qed.
 
 (* Here is the higher-order boolean expression optimizer from the
@@ -240,8 +240,13 @@ Example hoare_asgn_example :
 Proof.
   apply hoare_seq with (Q := (X = 1)%assertion).
   (* The annotation [%assertion] is needed here to help Coq parse correctly. *)
-  (* FILL IN HERE *)
-Admitted.
+  - eapply hoare_consequence_pre.
+  -- apply hoare_asgn.
+  -- assn_auto.
+  - eapply hoare_consequence_pre.
+  -- apply hoare_asgn.
+  -- assn_auto.
+Qed.
 
 (** Exercise: 3 points (swap_exercise)  *)
 (** Write an Imp program [c] that swaps the values of [X] and [Y] and
@@ -251,15 +256,21 @@ Admitted.
 *)
 
 Definition swap_program : com :=
-  <{skip}>.  (* REPLACE THIS LINE WITH YOUR DEFINITION *)
+  <{Z := X; X := Y; Y := Z}>.
 
 Theorem swap_exercise :
   {{X <= Y}}
   swap_program
   {{Y <= X}}.
-Proof.
-  (* FILL IN HERE *)
-Admitted.
+  Proof.
+  - eapply hoare_seq.
+  -- eapply hoare_seq.
+  --- apply hoare_asgn.
+  --- apply hoare_asgn.
+  -- eapply hoare_consequence_pre.
+  --- apply hoare_asgn.
+  --- assn_auto.
+Qed.
 
 (* ================================================================= *)
 (** ** Exercise: Parity *)
@@ -336,6 +347,8 @@ Proof.
     exfalso. apply H. lia.
 Qed.
 
+From Coq Require Import Arith.Compare_dec.
+
 Theorem parity_correct :
   forall (m : nat),
   {{ X = m }}
@@ -344,8 +357,27 @@ Theorem parity_correct :
   end
   {{X = parity m}}.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  intros.
+  eapply hoare_consequence with (P' := (ap parity X = parity m)%assertion).
+  - apply hoare_while.
+    eapply hoare_consequence_pre.
+  -- apply hoare_asgn.
+  -- verify_assn.
+     rewrite <- H.
+     apply parity_ge_2.
+     apply leb_complete. assumption.
+  - verify_assn.
+  - verify_assn.
+    rewrite <- H.
+    symmetry.
+    apply parity_lt_2.
+    unfold not.
+    intros.
+    apply leb_correct in H1.
+    simpl in H1.
+    rewrite H0 in H1.
+    discriminate H1.
+Qed.
 
 (* ================================================================= *)
 (** ** Exercise: Factorial *)
@@ -370,18 +402,18 @@ Admitted.
     the following decorated program may help you complete this proof.
 
     {{ X = m }} ->>
-    {{                                      }}
+    {{ 1 * X! = m! }}
   Y := 1;
-    {{                                      }}
+    {{ Y * X! = m! }}
   while X <> 0
-  do   {{                                      }} ->>
-       {{                                      }}
+  do   {{ Y * X! = m! /\ X <> 0 }} ->>
+       {{ (Y * X) * (X - 1)! = m! }}
      Y := Y * X;
-       {{                                      }}
+       {{ Y * (X - 1)! = m! }}
      X := X - 1
-       {{                                      }}
+       {{ Y * X! = m! }}
   end
-    {{                                      }} ->>
+    {{ Y * X! = m! /\ X = 0 }} ->>
     {{ Y = m! }}
 *)
 
@@ -411,5 +443,21 @@ Theorem factorial_correct : forall (m : nat),
   end }>
     {{ fun st => st Y = real_fact m }}.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  intros.
+  eapply hoare_seq with (Q := (Y * (ap real_fact X) = real_fact m)%assertion).
+  - eapply hoare_consequence_post.
+  -- apply hoare_while.
+     eapply hoare_consequence_pre.
+  --- eapply hoare_seq.
+  ---- apply hoare_asgn.
+  ---- apply hoare_asgn.
+  --- verify_assn.
+      apply real_fact_neq_0 in H0.
+      lia.
+  -- verify_assn.
+     simpl in H.
+     lia.
+  - eapply hoare_consequence_pre.
+  -- apply hoare_asgn.
+  -- verify_assn.
+Qed.
