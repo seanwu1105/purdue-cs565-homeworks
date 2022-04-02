@@ -49,11 +49,11 @@ Paraprhase each of the following Hoare triples in English.
 \begin{itemize}
 \item[a. ]   \lstinline!|- {True} c {X = 5}!
 
-For any possible initial state, the program c will terminate in a state where X equals to 5.
+For any possible initial state, if the program c terminates, the final state will be a state where X equals to 5.
 
 \item[b. ]   \lstinline!|- {100 < Z} c {Z = 100}!
 
-For any initial state where Z is greater than 100, the program c will terminate in a state where Z equals to 100.
+For any initial state where Z is greater than 100, if the program c terminates, the final state will be a state where Z equals to 100.
 
 \item[c. ]   \lstinline!|- {X <> Y} c {False}!
 
@@ -61,7 +61,7 @@ For any initial state where X does not equals to Y, the program c will not termi
 
 \item[d. ]   \lstinline!|- {True} c {(Z = Y <-> Y < X) /\ (Z = X <-> X <= Y)}!
 
-For any possible initial state, the program c will terminate in a state satisfies one of the following conditions: (1) Z equals to Y and Y is less than X (2) Z equals to X and X is less or equals to Y.
+For any possible initial state, if the program c terminates, the final state will satisfy one of the following conditions: (1) Z equals to Y and Y is less than X (2) Z equals to X and X is less or equals to Y.
 
 \end{itemize}
 \end{problem}
