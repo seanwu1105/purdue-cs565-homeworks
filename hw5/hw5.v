@@ -401,7 +401,7 @@ Module ISASemantics.
       wlp p Q (wlp_gen p Q).
   Proof.
     unfold wlp, "->>". induction p; intros; apply H in H0.
-    - specialize (H0 st). apply H0. constructor.
+    - apply H0. constructor.
     - induction a; 
       try destruct src, dest; 
       try split; 
