@@ -123,12 +123,12 @@ Module ISASemantics.
   (** Exercise: 1 point (assert_ex_3) *)
   (* Write an assertion that claims that the conditional flag records
      whether dx is less than cx. *)
-  Definition assert_ex_3 : Assertion :=
-    (* REPLACE THIS LINE WITH YOUR DEFINITION *) fun st => False.
+  Definition assert_ex_3 : Assertion := fun st => getReg dx st <? getReg cx st = getFlag st.
   Example assert_ex_3_ex : assert_ex_3 (MState 0 3 4 false).
   Proof.
-    (* FILL IN HERE *)
-  Admitted.
+    unfold assert_ex_3. 
+    auto.
+  Qed.
 
   (* Step 1B: Define a language of claims about programs (Basic Blocks
      in this setting): *)
@@ -226,7 +226,7 @@ Module ISASemantics.
       |-I {{[flag := r1 =? r2]Q}} (cmp (reg r1) (reg r2)) {{Q}}
 
     ----------------------------------------------------------------------- [HCSetImm]
-    |-I {{(flag -> [r2 := n]Q) /\ (~ flag -> Q ) (cset (imm n) r2) {{Q}} *)
+    |-I {{(flag -> [r2 := n]Q) /\ (~ flag -> Q )}} (cset (imm n) r2) {{Q}} *)
 
   (* Here are the rules for individual instructions. Note that most
      are very similar to [H_Asgn], the rule for assignment in our
@@ -292,7 +292,12 @@ Module ISASemantics.
   (** Exercise: 1 point (BB_proof) *)
   (* Formalize these rules as an inductive proposition *)
   Inductive BB_proof : Assertion -> BasicBlock -> Assertion -> Prop :=
-
+  | H_End : forall (P : Assertion),
+      |- {{P}} [ ] {{P}}
+  | H_Seq : forall (P Q R : Assertion) (i : Instr) (p : BasicBlock),
+      |-I {{P}} i {{R}} -> |- {{R}} p {{Q}} -> |- {{P}} i :: p {{Q}}
+  | H_Consequence : forall (P P' Q Q' : Assertion) (p : BasicBlock),
+      |- {{P'}} p {{Q'}} -> P ->> P' -> Q' ->> Q -> |- {{P}} p {{Q}}
   where " |- {{ P }}  p  {{ Q }}" := (BB_proof P p Q).
 
   (* Exercise: 3 points (BB_proof_sound)*)
@@ -303,8 +308,16 @@ Module ISASemantics.
       |- {{P}} p {{Q}} ->
       {{P}} p {{Q}}.
   Proof.
-    (* FILL IN HERE *)
-  Admitted.
+    intros.
+    induction H; unfold BB_triple; intros.
+    - inversion H0. subst. assumption.
+    - inversion H2. apply (IHBB_proof ms').
+    -- induction H; inversion H6; subst; try (apply H1); assumption.
+    -- assumption.
+    - apply H1. apply (IHBB_proof st).
+    -- apply H0. assumption.
+    -- assumption. 
+  Qed.
 
   (* To prove completeness, we first define a function for computing the weakest preconditions
      of instructions: *)
@@ -365,8 +378,10 @@ Module ISASemantics.
 
      Hint: Basic Blocks are very similar to sequences of Imp commands
      follow by skip. *)
-  Fixpoint wlp_gen (p : BasicBlock) (Q : Assertion) {struct p} : Assertion :=
-    (* REPLACE THIS LINE WITH YOUR DEFINITION *) fun st => False.
+  Fixpoint wlp_gen (p : BasicBlock) (Q : Assertion) {struct p} : Assertion := match p with
+    | [ ] => Q
+    | i :: p' => wlp_Instr_gen i (wlp_gen p' Q)
+  end.
 
   Definition wlp
              (p : BasicBlock)
@@ -384,7 +399,11 @@ Module ISASemantics.
     : forall p Q,
       wlp p Q (wlp_gen p Q).
   Proof.
-    (* FILL IN HERE *)
+    unfold wlp, "->>". induction p.
+    - intros. apply H in H0. specialize (H0 st). apply H0. apply E_Done.
+    - intros. apply H in H0. induction a.
+    -- destruct src.
+    --- simpl.
   Admitted.
 
   (* Exercise: 3 points (wlp_gen_is_derivable) *)
