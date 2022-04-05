@@ -419,8 +419,13 @@ Module ISASemantics.
   Theorem wlp_is_derivable  : forall p Q,
        |- {{wlp_gen p Q}} p {{Q}}.
   Proof.
-    (* FILL IN HERE *)
-  Admitted.
+    intros.
+    induction p.
+    - constructor.
+    - econstructor.
+    -- apply wlp_Instr_is_derivable.
+    -- assumption. 
+  Qed.
 
   (* Exercise: 2 points (BB_proof_complete) *)
 
@@ -434,8 +439,14 @@ Module ISASemantics.
       {{P}} p {{Q}} ->
       |- {{P}} p {{Q}}.
   Proof.
-    (* FILL IN HERE *)
-  Admitted.
+    intros.
+    assert (|- {{wlp_gen p Q}} p {{Q}}) by (eauto using wlp_is_derivable).
+    assert (P ->> wlp_gen p Q) by (eapply wlp_gen_is_wlp; eauto).
+    econstructor.
+    - eauto.
+    - eauto.
+    - unfold "->>". intros. assumption.
+  Qed.
 
   Ltac verify_assn :=
     unfold "->>"; simpl; intros;
