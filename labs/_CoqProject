@@ -2,6 +2,8 @@
 -R ../lf LF
 -R ../plf PLF
 -R DenotationalSemantics DS
+DenotationalSemantics/Fixpoints.v
+DenotationalSemantics/Denotational.v
 Lab3Script2.v
 Lab4Script1.v
 Lab8Script.v

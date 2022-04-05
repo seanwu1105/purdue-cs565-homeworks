@@ -400,12 +400,17 @@ Module ISASemantics.
     : forall p Q,
       wlp p Q (wlp_gen p Q).
   Proof.
-    unfold wlp, "->>". induction p.
-    - intros. apply H in H0. specialize (H0 st). apply H0. apply E_Done.
-    - intros. induction a.
-    -- destruct src.
-    --- eapply IHp.
-  Admitted.
+    unfold wlp, "->>". induction p; intros; apply H in H0.
+    - specialize (H0 st). apply H0. constructor.
+    - induction a; 
+      try destruct src, dest; 
+      try split; 
+      intros;
+      eapply IHp;
+      try (unfold BB_triple; intros; apply H0; eapply E_Instr; eauto);
+      constructor;
+      assumption.
+  Qed.
 
   (* Exercise: 3 points (wlp_gen_is_derivable) *)
 
@@ -449,8 +454,7 @@ Module ISASemantics.
     match goal with
     | |- {{?P}} ?p {{?Q}} =>
       eapply BB_proof_sound;
-      (* UNCOMMENT THE FOLLOWING LINE ONCE YOU COMPLETE THE DEFINITION OF BB_proof. *)
-      (* eapply H_Consequence with (Q' := Q);*)
+      eapply H_Consequence with (Q' := Q);
       [ eapply wlp_is_derivable
       | verify_assn
       | verify_assn]
@@ -463,20 +467,16 @@ Module ISASemantics.
     forall (src : Operand) (dest : Register) (f : bool),
       {{fun st => getFlag st = f}} [add src dest] {{fun st => getFlag st = f}}.
   Proof.
-    (* UNCOMMENT THE FOLLOWING TWO LINES *)
-    (* intros; verify_ht.
-       Qed. *)
-  Admitted.
+    intros; verify_ht.
+  Qed.
 
   Theorem evalCsetOK' :
     forall (src : Operand) (dest : Register)
            (P : Assertion),
       {{fun st => P st /\ getFlag st = false}} [cset src dest] {{P}}.
   Proof.
-    (* UNCOMMENT THE FOLLOWING TWO LINES *)
-    (* intros; verify_ht.
-       Qed. *)
-  Admitted.
+    intros; verify_ht.
+  Qed.
 
   Theorem asmSwapACOK' :
     forall m n,
@@ -484,18 +484,14 @@ Module ISASemantics.
         asmSwapAC
         {{fun st => getReg ax st = n /\ getReg cx st = m}}.
   Proof.
-    (* UNCOMMENT THE FOLLOWING TWO LINES *)
-    (* intros; verify_ht.
-       Qed. *)
-  Admitted.
+    intros; verify_ht.
+  Qed.
 
   Theorem asmTripleAxOK' :
     forall m,
       {{fun st => getReg ax st = m}} asmTriple {{fun st => getReg ax st = 3 * m}}.
   Proof.
-    (* UNCOMMENT THE FOLLOWING TWO LINES *)
-  (* intros; verify_ht.
-     Qed. *)
-  Admitted.
+    intros; verify_ht.
+  Qed.
 
 End ISASemantics.
