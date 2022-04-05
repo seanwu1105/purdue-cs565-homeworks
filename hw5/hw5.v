@@ -378,10 +378,11 @@ Module ISASemantics.
 
      Hint: Basic Blocks are very similar to sequences of Imp commands
      follow by skip. *)
-  Fixpoint wlp_gen (p : BasicBlock) (Q : Assertion) {struct p} : Assertion := match p with
+  Fixpoint wlp_gen (p : BasicBlock) (Q : Assertion) {struct p} : Assertion := 
+    match p with
     | [ ] => Q
     | i :: p' => wlp_Instr_gen i (wlp_gen p' Q)
-  end.
+    end.
 
   Definition wlp
              (p : BasicBlock)
@@ -401,9 +402,9 @@ Module ISASemantics.
   Proof.
     unfold wlp, "->>". induction p.
     - intros. apply H in H0. specialize (H0 st). apply H0. apply E_Done.
-    - intros. apply H in H0. induction a.
+    - intros. induction a.
     -- destruct src.
-    --- simpl.
+    --- eapply IHp.
   Admitted.
 
   (* Exercise: 3 points (wlp_gen_is_derivable) *)

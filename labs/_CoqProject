@@ -1,4 +1,7 @@
 -R . Top
 -R ../lf LF
+-R ../plf PLF
+-R DenotationalSemantics DS
 Lab3Script2.v
 Lab4Script1.v
+Lab8Script.v
