@@ -4,6 +4,7 @@
 \usepackage{amsmath,amsthm,amssymb,amsfonts}
 \usepackage{syntax}
 \usepackage{bcprules}
+\usepackage{mathpartir}
 \usepackage{bm}
 \usepackage{listings}
 \usepackage{wrapfig}
@@ -41,7 +42,7 @@
 \begin{document}
 
 \title{CS 565 Spring 2022 Homework 5 \\ (Axiomatic Semantics Again)}
-\author{Your name: \underline{\hspace{10cm}}}
+\author{Your name: \underline{Shuang Wu (wu1716@purdue.edu)}}
 \maketitle
 
 \begin{problem}{1 (2 points)}
@@ -49,16 +50,22 @@ What is the weakest precondition for each of the following:
 
 \begin{itemize}
 \item[a. ]   \lstinline!wp( X := X + 1, {X > 5})!
-  \vspace{3cm}
+
+$\equiv$ \lstinline!{X + 1 > 5} = {X > 4}!
 
 \item[b. ]    \lstinline!wp( X := Y, {X <> Y})!
-\vspace{3cm}
+
+$\equiv$ \lstinline!{Y <> Y} = {False}!
 
 \item[c. ]   \lstinline!wp( X := X + 1; Y := Z, {X = Y})!
-\vspace{3cm}
 
-\item[d. ]   \lstinline!wp( if (X < 10) then Z := X else Z := Y, {Z < 10})!
-  \vspace{3cm}
+$\equiv$ \lstinline!{X + 1 = Z}!
+
+\item[d. ]   \lstinline!wp( if (X < 10) then Z := X else Z := Y, {Z < 10})! 
+
+$\equiv$ \lstinline!X < 10 -> {X < 10} /\ X! $\nless$ 10 \lstinline!-> {Y < 10}!
+
+\lstinline!= X < 10 -> {X < 10} /\ 10 <= X -> {Y < 10}!
 
 \end{itemize}
 \end{problem}
@@ -68,18 +75,65 @@ What is the weakest precondition for each of the following:
 \begin{problem}{2 (1 point)}
   Provide a derivation tree showing that the following program has the
   indicated type:
-  \vspace{6cm}
   \begin{center}
-    \lstinline!f : Bool -> Bool |- f (if false then true else false) : Bool !
+    \begin{mathpar}
+      \inferrule*[Right=T-App]
+      {
+        \inferrule*[Right=T-Var]
+        {[f: \text{Bool} \rightarrow \text{Bool}] (f) = \text{Bool} \rightarrow \text{Bool}}
+        {f: \text{Bool} \rightarrow \text{Bool} \vdash f: \text{Bool} \rightarrow \text{Bool}}
+        \\
+        \inferrule*[Right=T-If]
+        {
+          \inferrule*[Right=T-False] { }
+          {f: \text{Bool} \rightarrow \text{Bool} \vdash \text{false}: \text{Bool}}
+          \\
+          \inferrule*[Left=T-True] { }
+          {f: \text{Bool} \rightarrow \text{Bool} \vdash \text{true}: \text{Bool}}
+          \\
+          \inferrule*[Right=T-False] { }
+          {f: \text{Bool} \rightarrow \text{Bool} \vdash \text{false}: \text{Bool}}
+        }
+        {f: \text{Bool} \rightarrow \text{Bool} \vdash \textbf{if}~ \text{false}~ \textbf{then}~ \text{true}~ \textbf{else}~ \text{false}: \text{Bool}}
+      }
+      {f: \text{Bool} \rightarrow \text{Bool} \vdash f (\textbf{if}~ \text{false}~ \textbf{then}~ \text{true}~ \textbf{else}~ \text{false}): \text{Bool}}
+    \end{mathpar}
   \end{center}
 \end{problem}
 
 \begin{problem}{3 (1 point)}
   Provide a derivation tree showing that the following program has the
   indicated type:
-  \vspace{6cm}
   \begin{center}
-    \lstinline!f : Bool -> Bool |- \. x : Bool. f (if x then false else true) : Bool !
+    \begin{mathpar}
+      \inferrule*[Right=T-Abs]
+      {
+        \inferrule*[Right=T-App]
+        {
+          \inferrule*[Right=T-Var]
+          {[f: \text{Bool} \rightarrow \text{Bool}~ ; x: \text{Bool}] (f) = \text{Bool} \rightarrow \text{Bool}}
+          {f: \text{Bool} \rightarrow \text{Bool}~ ; x: \text{Bool} \vdash f: \text{Bool} \rightarrow \text{Bool}}
+          \\
+          \inferrule*[Right=T-If]
+          {
+            \inferrule*[Right=T-Var]
+            {[f: \text{Bool} \rightarrow \text{Bool}~ ; x: \text{Bool}](x) = \text{Bool}}
+            {f: \text{Bool} \rightarrow \text{Bool}~ ; x: \text{Bool} \vdash x: \text{Bool}}
+            \\
+            \inferrule*[Left=T-True] { }
+            {f: \text{Bool} \rightarrow \text{Bool}~ ; x: \text{Bool} \vdash \text{true}: \text{Bool}}
+            \\
+            \inferrule*[Right=T-False] { }
+            {f: \text{Bool} \rightarrow \text{Bool}~ ; x: \text{Bool} \vdash \text{false}: \text{Bool}}
+          }
+        {f: \text{Bool} \rightarrow \text{Bool}~ ; x: \text{Bool} \vdash \textbf{if}~ x~ \textbf{then}~ \text{true}~ \textbf{else}~ \text{false}: \text{Bool}}
+        }
+        {f: \text{Bool} \rightarrow \text{Bool}~ ; x: \text{Bool} \vdash f (\textbf{if}~ x~ \textbf{then}~ \text{false}~ \textbf{else}~ \text{true}) : \text{Bool}}
+      }
+      {f: \text{Bool} \rightarrow \text{Bool} \vdash \lambda~ x: \text{Bool} .~ f (\textbf{if}~ x~ \textbf{then}~ \text{false}~ \textbf{else}~ \text{true}): \text{Bool} \rightarrow \text{Bool}}
+    \end{mathpar}
+    
+    \lstinline!f : Bool -> Bool |- \. x : Bool. f (if x then false else true) : Bool ! ???????????
   \end{center}
 \end{problem}
 
@@ -87,6 +141,12 @@ What is the weakest precondition for each of the following:
   Provide a context $\Gamma$ under which the term \lstinline!f x y!
   has type bool. Can you give a simple description of the set of
   \emph{all} such contexts?
+  
+  \begin{center}
+      $f : \text{nat} \rightarrow \text{nat} \rightarrow \text{bool}~;~ x : \text{nat}~;~ y : \text{nat}$
+  \end{center}
+  
+  As long as the last type (return type) of $f$ is bool, other types are unrestricted. Any context fit this predicate falls into the set.
 \end{problem}
 
 \end{document}
