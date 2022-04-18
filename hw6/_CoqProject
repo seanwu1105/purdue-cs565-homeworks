@@ -1,0 +1,5 @@
+-R . Top
+-R ../plf PLF
+StlcBoolProd.v
+hw6.v
+hw6_test.v

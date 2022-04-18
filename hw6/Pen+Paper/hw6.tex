@@ -1,0 +1,149 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amsthm,amssymb,amsfonts}
+\usepackage{syntax}
+\usepackage{bcprules}
+\usepackage{bm}
+\usepackage{listings}
+
+\newtheorem{theorem}{Theorem}
+
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\somany}[1]{$\overline{\mathsf{#1}}$}
+
+\newenvironment{problem}[2][Problem]{\begin{trivlist}
+\item[\hskip \labelsep {\bfseries #1}\hskip \labelsep {\bfseries #2.}]}{\end{trivlist}}
+%If you want to title your bold things something different just make another thing exactly like this but replace "problem" with the name of the thing you want, like theorem or lemma or whatever
+
+
+\lstset{ %
+  basicstyle=\sf,  %
+  breaklines=true, %
+  columns=fullflexible, %
+  literate={<=}{$\le\;$}{1}
+  {<->}{$\leftrightarrow\;$}{1}
+  {->}{$\rightarrow$}{1}
+  {|-}{$\vdash$}{1}
+  {<>}{$\neq\;$}{1}
+  {\\.}{$\lambda\;$}{1}
+  {/\\}{$\;\land\;$}{1},
+  morekeywords={if,
+    while,
+    then,
+    else,
+    do,
+    skip,
+    break
+  }
+}
+
+\begin{document}
+
+\title{CS 565 Spring 2022 Homework 6 \\ (Type Inference + Subtyping)}
+\author{Your name: \underline{\hspace{10cm}}}
+\maketitle
+
+\begin{problem}{1 (1 point)}
+  Construct a constraint typing derivation whose conclusion is
+  \[
+    \vdash \mathsf{\lambda x : X.\; \lambda y : Y.\; \lambda z : Z.\; (x\;
+      z)\; (y\; z) : S ~\mid~\mathcal{C}}
+  \]
+  for some $\mathsf{S}$, $\mathcal{C}$.
+\end{problem}
+
+\vspace{7cm}
+
+\begin{problem}{2 (2 points)}
+  Write down principal unifers (when they exist) for the following
+  sets of constraints:
+  \begin{itemize}
+
+  \item $\mathsf{\{\}}$ (The empty set of constraints)
+  \item[ ]
+  \item[ ]
+
+  \item $\mathsf{\{Y = V \rightarrow U, Y = X \rightarrow V\}}$
+  \item[ ]
+  \item[ ]
+
+  \item $\mathsf{\{X = Bool, Y = X \rightarrow X\}}$
+  \item[ ]
+  \item[ ]
+
+  \item $\mathsf{\{ Bool \rightarrow Bool = X \rightarrow Y \}}$
+  \item[ ]
+  \item[ ]
+
+  \item $\mathsf{\{ (Bool \rightarrow Y) \rightarrow Bool = Bool \rightarrow U \}}$
+  \item[ ]
+  \item[ ]
+
+  \end{itemize}
+\end{problem}
+
+\begin{problem}{3 (2 points)}
+  Suppose we have types \lstinline|S, T, U|, and \lstinline|V| with
+  \lstinline|S <: T| and \lstinline|U <: V|.  Which of the following
+  subtyping assertions are then true? Write true or false after each
+  one.
+
+  \begin{itemize}
+  \item \lstinline|T->S <: T->S|
+  \item[ ]
+  \item[ ]
+
+  \item \lstinline|T->T->U <: S->S->V|
+  \item[ ]
+  \item[ ]
+
+  \item \lstinline|(T->T)->U <: (S->S)->V|
+  \item[ ]
+  \item[ ]
+
+  \item \lstinline|((T->S)->T)->U <: ((S->T)->S)->V|
+  \item[ ]
+  \item[ ]
+
+  \end{itemize}
+
+\end{problem}
+
+\pagebreak
+\begin{problem}{4 (1 point)}
+  How many supertypes does the type
+  \begin{itemize}
+  \item [ ] \lstinline|{{x: {z:Bool, q: Nat}, y: Bool -> Bool}}|
+  \end{itemize}
+  have? That is, how many different types \lstinline|T| are there such
+  that
+  \begin{itemize}
+  \item[ ] \lstinline|{x: {z:Bool, q: Nat}, y: Bool -> Bool} <: T|
+  \end{itemize}
+  (We consider two types to be
+  different if they are written differently, even if each is a subtype
+  of the other. For example, \lstinline|{x:A,y:B}| and
+  \lstinline|{y:B,x:A}| are different.)
+\end{problem}
+
+\vspace{5cm}
+
+\begin{problem}{5 (2 points)}
+  The subtyping rule for product types:
+
+  \infrule{\mathsf{S_1 <: T_1}  \andalso  \mathsf{S_2 <: T_2}}
+  { \mathsf{S_1*S_2 <: T_1*T_2}}
+
+\noindent intuitively corresponds to the ``depth'' subtyping rule for
+  records. Extending the analogy, a language designer might consider
+  including a ``permutation'' rule as well
+
+  \infrule{}{\mathsf{T_1*T_2 <: T_2*T_1}}
+
+\noindent for products. Explain in a couple of sentences why such a subtyping
+  rule is or is not sound?
+\end{problem}
+
+\end{document}
