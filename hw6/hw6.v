@@ -179,7 +179,35 @@ Gamma ⊢ snd t0 ∈ T2
 
   (** Exercise: 2 point (has_type) *)
   Inductive has_type : context -> tm -> ty -> Prop :=
-  (* FILL IN HERE *)
+  | T_Var : forall Gamma x T1,
+    Gamma x = Some T1 ->
+    Gamma |- x \in T1
+  | T_Abs : forall Gamma x t1 T1 T2,
+    (x |-> T2 ; Gamma) |- t1 \in T1 ->
+    Gamma |- \x : T2, t1 \in (T2 -> T1)
+  | T_App : forall Gamma t1 t2 T1 T2,
+    Gamma |- t1 \in (T2 -> T1) ->
+    Gamma |- t2 \in T2 ->
+    Gamma |- t1 t2 \in T1
+  | T_True : forall Gamma,
+    Gamma |- true \in Bool
+  | T_False : forall Gamma,
+    Gamma |- false \in Bool
+  | T_If : forall Gamma t1 t2 t3 T1,
+    Gamma |- t1 \in Bool ->
+    Gamma |- t2 \in T1 ->
+    Gamma |- t3 \in T1 ->
+    Gamma |- if t1 then t2 else t3 \in T1
+  | T_Pair : forall Gamma t1 t2 T1 T2,
+    Gamma |- t1 \in T1 ->
+    Gamma |- t2 \in T2 ->
+    Gamma |- <t1, t2> \in (T1 * T2)
+  | T_Fst : forall Gamma t0 T1 T2,
+    Gamma |- t0 \in (T1 * T2) ->
+    Gamma |- fst t0 \in T1
+  | T_Snd : forall Gamma t0 T1 T2,
+    Gamma |- t0 \in (T1 * T2) ->
+    Gamma |- snd t0 \in T2
 
   where "Gamma '|-' t '\in' T" := (has_type Gamma t T).
 
@@ -192,7 +220,6 @@ Gamma ⊢ snd t0 ∈ T2
       empty |- t \in T ->
       value t \/ exists t', t --> t'.
   Proof.
-  (* UNCOMMENT THE FOLLOWING LINES AFTER COMPLETING the [has_type] EXERCISE
   intros t T Ht.
   remember empty as Gamma.
   generalize dependent HeqGamma.
@@ -218,7 +245,7 @@ Gamma ⊢ snd t0 ∈ T2
            [t1 = \x0 : T0, t11], since abstractions are the
            only values that can have an arrow type.  But
            [(\x0 : T0, t11) t2 --> [x:=t2]t11] by [ST_AppAbs]. *)
-        destruct H; try solve_by_invert; eauto.
+        destruct H; try solve_by_invert. eapply ex_intro. apply ST_AppAbs. eauto.
       * (* t2 steps *)
         (* If [t1] is a value and [t2 --> t2'],
            then [t1 t2 --> t1 t2'] by [ST_App2]. *)
@@ -226,9 +253,24 @@ Gamma ⊢ snd t0 ∈ T2
     + (* t1 steps *)
       (* Finally, If [t1 --> t1'], then [t1 t2 --> t1' t2]
          by [ST_App1]. *)
-      destruct H as [t1' Hstp]; eauto. *)
-    (* FILL IN HERE *)
-  Admitted.
+      destruct H as [t1' Hstp]; eauto.
+  - (* T_If *)
+    destruct IHHt1; eauto.
+    + destruct t1; try solve_by_invert; eauto.
+    + destruct H. eauto.
+  - (* T_Pair *)
+    destruct IHHt1; eauto.
+    + destruct IHHt2; eauto. destruct H0. eauto.
+    + destruct H. eauto.
+  - (* T_Fst *)
+    destruct IHHt; eauto.
+    + destruct H; try solve_by_invert. eauto.
+    + destruct H. eauto.
+  - (* T_Snd *)
+    destruct IHHt; eauto.
+    + destruct H; try solve_by_invert. eauto.
+    + destruct H. eauto. 
+  Qed.
 
   (* ###################################################################### *)
   (** *** Substitution *)
@@ -257,7 +299,6 @@ Gamma ⊢ snd t0 ∈ T2
                                  empty |- v \in U   ->
                                                 Gamma |- [x:=v]t \in T.
   Proof.
-  (* UNCOMMENT THE FOLLOWING LINES AFTER COMPLETING the [has_type] EXERCISE
   intros Gamma x U t v T Ht Hv.
   generalize dependent Gamma. generalize dependent T.
   (* Proof: By induction on the term [t].  Most cases follow
@@ -287,8 +328,7 @@ Gamma ⊢ snd t0 ∈ T2
     + (* x<>y *)
       apply IHt.
       rewrite update_permute; auto.
-Qed. *)
-  Admitted.
+  Qed.
 
   (* ###################################################################### *)
   (** *** Preservation *)
@@ -305,8 +345,13 @@ Qed. *)
   (* Proof: By induction on the given typing derivation.
      Hint: Many cases are contradictory ([T_Var], [T_Abs]).
      The most interesting cases are [T_App], [T_Fst], and [T_Snd] *)
-    (* FILL IN HERE *)
-  Admitted.
+    induction HT; intros; subst; try solve [inversion H; subst; eauto];
+    inversion H; subst; eauto.
+    - apply substitution_preserves_typing with (U:=T2);
+       inversion HT1; eauto.
+    - inversion HT. eauto.
+    - inversion HT. eauto.
+  Qed.
 
   Definition stuck (t:tm) : Prop :=
     (normal_form step) t /\ ~ value t.
@@ -320,8 +365,14 @@ Qed. *)
       t -->* t' ->
       ~(stuck t').
   Proof.
-    (* FILL IN HERE *)
-  Admitted.
+    unfold stuck, normal_form, not.
+    intros.
+    destruct H1.
+    induction H0.
+    - apply progress in H. destruct H; eauto.
+    - apply IHmulti; try eauto.
+    -- eapply preservation; eauto.
+  Qed.
 
   (***************************************************************************
   Part 2: Type Inference [5 points]
@@ -386,7 +437,19 @@ Qed. *)
       C = (Tc == Ty_Bool) :: (Tt == Te) :: Cc ++ Ct ++ Ce ->
       Gamma ||- if t1 then t2 else t3 \in Tt | C
 
-  (* YOUR RULES GO HERE *)
+  | TC_Pair : forall Gamma t1 t2 T1 T2 Tp C1 C2 C3,
+      Gamma ||- t1 \in T1 | C1 ->
+      Gamma ||- t2 \in T2 | C2 ->
+      C3 = (Tp == Ty_Prod T1 T2) :: C1 ++ C2 ->
+      Gamma ||- <t1, t2> \in Tp | C3
+  | TC_Fst : forall Gamma t0 T1 T2 Tp Cp C,
+      Gamma ||- t0 \in Tp | Cp ->
+      C = (Tp == Ty_Prod T1 T2) :: Cp ->
+      Gamma ||- fst t0 \in T1 | C
+  | TC_Snd : forall Gamma t0 T1 T2 Tp Cp C,
+      Gamma ||- t0 \in Tp | Cp ->
+      C = (Tp == Ty_Prod T1 T2) :: Cp ->
+      Gamma ||- snd t0 \in T2 | C
 
   where "Gamma '||-' t '\in' T '|' Cs" := (has_type_w_constraints Gamma t T Cs).
 
@@ -410,26 +473,20 @@ Qed. *)
   Example product_inference_example_1 :
     empty ||- \x: X, fst x \in X -> U | [Ty_Var X == Ty_Prod U V].
   Proof.
-    (* UNCOMMENT THE FOLLOWING TWO LINES AFTER FINISHING (has_type_w_constraints) *)
-  (* intros; repeat econstructor.
-      Qed. *)
-  Admitted.
+  intros; repeat econstructor.
+  Qed.
 
   Example product_inference_example_2 :
     empty ||- \x: X, snd x \in X -> V | [Ty_Var X == Ty_Prod U V].
   Proof.
-    (* UNCOMMENT THE FOLLOWING TWO LINES AFTER FINISHING (has_type_w_constraints) *)
-  (* intros; repeat econstructor.
-     Qed. *)
-  Admitted.
+    intros; repeat econstructor.
+  Qed.
 
   Example product_inference_example_3 :
     empty ||- \x: X, \y : Y * Y, if x then fst y else false \in X -> Y * Y -> Y | [Ty_Var X == Ty_Bool; Ty_Var Y == Ty_Bool; Ty_Prod Y Y == Ty_Prod Y Y ].
   Proof.
-    (* UNCOMMENT THE FOLLOWING TWO LINES AFTER FINISHING (has_type_w_constraints) *)
-  (* intros; repeat econstructor.
-      Qed. *)
-  Admitted.
+    intros; repeat econstructor.
+  Qed.
 
 
   (** The next five examples give the terms that generated the sets of
