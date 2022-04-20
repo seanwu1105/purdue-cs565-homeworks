@@ -4,6 +4,7 @@
 \usepackage{amsmath,amsthm,amssymb,amsfonts}
 \usepackage{syntax}
 \usepackage{bcprules}
+\usepackage{mathpartir}
 \usepackage{bm}
 \usepackage{listings}
 
@@ -42,7 +43,7 @@
 \begin{document}
 
 \title{CS 565 Spring 2022 Homework 6 \\ (Type Inference + Subtyping)}
-\author{Your name: \underline{\hspace{10cm}}}
+\author{Your name: \underline{Shuang Wu (wu1716@purdue.edu)}}
 \maketitle
 
 \begin{problem}{1 (1 point)}
@@ -52,34 +53,71 @@
       z)\; (y\; z) : S ~\mid~\mathcal{C}}
   \]
   for some $\mathsf{S}$, $\mathcal{C}$.
-\end{problem}
 
-\vspace{7cm}
+\begin{center}
+  \begin{mathpar}
+  \inferrule*[Right=CTAbs]
+  {
+    \inferrule*[Right=CTAbs]
+    {
+      \inferrule*[Right=CTAbs]
+      {
+        \inferrule*[Right=CTApp]
+        {
+          \inferrule*[Right=CTApp]
+          {
+            \inferrule*[Left=CTVar]
+            {[x \mapsto X, y \mapsto Y, z \mapsto Z](x) : X}
+            {[x \mapsto X, y \mapsto Y, z \mapsto Z] \vdash x : X ~\mid~ \emptyset}
+            \\
+            \inferrule*[Right=CTVar]
+            {[x \mapsto X, y \mapsto Y, z \mapsto Z](z) : Z}
+            {[x \mapsto X, y \mapsto Y, z \mapsto Z] \vdash z : Z ~\mid~ \emptyset}
+          }
+          {[x \mapsto X, y \mapsto Y, z \mapsto Z] \vdash (x \; z) : T_{xz} ~\mid~ \{X = Z \rightarrow T_{xz}\}}
+          \\
+          \inferrule*[Right=CTApp]
+          {
+            \inferrule*[Left=CTVar]
+            {[x \mapsto X, y \mapsto Y, z \mapsto Z](y) : Y}
+            {[x \mapsto X, y \mapsto Y, z \mapsto Z] \vdash y : Y ~\mid~ \emptyset}
+            \\
+            \inferrule*[Right=CTVar]
+            {[x \mapsto X, y \mapsto Y, z \mapsto Z](z) : Z}
+            {[x \mapsto X, y \mapsto Y, z \mapsto Z] \vdash z : Z ~\mid~ \emptyset}
+          }
+          {[x \mapsto X, y \mapsto Y, z \mapsto Z] \vdash (y \; z) : T_{yz} ~\mid~ \{Y = Z \rightarrow T_{yz}\}}
+        }
+        {[x \mapsto X, y \mapsto Y, z \mapsto Z] \vdash (x \; z) \; (y \; z) : T ~\mid~ \mathcal{C}}
+      }
+      {[x \mapsto X, y \mapsto Y] \vdash \lambda z : Z . \; (x \; z) \; (y \; z) : Z \rightarrow T ~\mid~ \mathcal{C}}
+    }
+    {[x \mapsto X] \vdash \lambda y : Y . \; \lambda z : Z . \; (x \; z) \; (y \; z) : Y \rightarrow Z \rightarrow T ~\mid~ \mathcal{C}}
+  }
+  {\vdash \lambda x : X . \; \lambda y : Y . \; \lambda z : Z . \; (x \; z) \; (y \; z) : S ~\mid~ \mathcal{C}}
+  \end{mathpar}
+\end{center}
+
+$\mathcal{C} \equiv \{X = Z \rightarrow T_{xz}, Y = Z \rightarrow T_{yz}, T_{xz} = T_{yz} \rightarrow T\}$
+
+$ S \equiv X \rightarrow Y \rightarrow Z \rightarrow T$
+
+\end{problem}
 
 \begin{problem}{2 (2 points)}
   Write down principal unifers (when they exist) for the following
   sets of constraints:
   \begin{itemize}
 
-  \item $\mathsf{\{\}}$ (The empty set of constraints)
-  \item[ ]
-  \item[ ]
+  \item $\mathsf{\{\}}$ (The empty set of constraints) $\equiv \{\}$
 
-  \item $\mathsf{\{Y = V \rightarrow U, Y = X \rightarrow V\}}$
-  \item[ ]
-  \item[ ]
+  \item $\mathsf{\{Y = V \rightarrow U, Y = X \rightarrow V\}} \equiv \mathsf{\{X \rightarrow X = X \rightarrow X, X \rightarrow X = X \rightarrow X\}}$
 
-  \item $\mathsf{\{X = Bool, Y = X \rightarrow X\}}$
-  \item[ ]
-  \item[ ]
+  \item $\mathsf{\{X = Bool, Y = X \rightarrow X\}} \equiv \mathsf{\{Bool = Bool, Bool \rightarrow Bool = Bool \rightarrow Bool\}}$
 
-  \item $\mathsf{\{ Bool \rightarrow Bool = X \rightarrow Y \}}$
-  \item[ ]
-  \item[ ]
+  \item $\mathsf{\{ Bool \rightarrow Bool = X \rightarrow Y \}} \equiv \mathsf{\{Bool \rightarrow Bool = Bool \rightarrow Bool\}}$
 
-  \item $\mathsf{\{ (Bool \rightarrow Y) \rightarrow Bool = Bool \rightarrow U \}}$
-  \item[ ]
-  \item[ ]
+  \item $\mathsf{\{ (Bool \rightarrow Y) \rightarrow Bool = Bool \rightarrow U \}}$ fail to unify.
 
   \end{itemize}
 \end{problem}
@@ -91,21 +129,13 @@
   one.
 
   \begin{itemize}
-  \item \lstinline|T->S <: T->S|
-  \item[ ]
-  \item[ ]
+  \item \lstinline|T->S <: T->S| True.
 
-  \item \lstinline|T->T->U <: S->S->V|
-  \item[ ]
-  \item[ ]
+  \item \lstinline|T->T->U <: S->S->V| True.
 
-  \item \lstinline|(T->T)->U <: (S->S)->V|
-  \item[ ]
-  \item[ ]
+  \item \lstinline|(T->T)->U <: (S->S)->V| False.
 
-  \item \lstinline|((T->S)->T)->U <: ((S->T)->S)->V|
-  \item[ ]
-  \item[ ]
+  \item \lstinline|((T->S)->T)->U <: ((S->T)->S)->V| True.
 
   \end{itemize}
 
@@ -126,9 +156,44 @@
   different if they are written differently, even if each is a subtype
   of the other. For example, \lstinline|{x:A,y:B}| and
   \lstinline|{y:B,x:A}| are different.)
+  
+  The record has 17 supertypes:
+  
+  $\{\}$,
+  
+  $\{y: \text{Bool} \rightarrow \text{Bool}\}$,
+  
+  $\{x: \{\}\}$,
+  
+  $\{x: \{z: \text{Bool}\}\}$,
+  
+  $\{x: \{q: \text{Nat}\}\}$,
+  
+  $\{x: \{z: \text{Bool}, q: \text{Nat}\}\}$,
+  
+  $\{x: \{q: \text{Nat}, z: \text{Bool}\}\}$,
+  
+  $\{x: \{\}, y: \text{Bool} \rightarrow \text{Bool}\}$,
+  
+  $\{x: \{z: \text{Bool}\}, y: \text{Bool} \rightarrow \text{Bool}\}$,
+  
+  $\{x: \{q: \text{Nat}\}, y: \text{Bool} \rightarrow \text{Bool}\}$,
+  
+  $\{x: \{z: \text{Bool}, q: \text{Nat}\}, y: \text{Bool} \rightarrow \text{Bool}\}$,
+  
+  $\{x: \{q: \text{Nat}, z: \text{Bool}\}, y: \text{Bool} \rightarrow \text{Bool}\}$
+  
+  $\{y: \text{Bool} \rightarrow \text{Bool}, x: \{\}\}$,
+  
+  $\{y: \text{Bool} \rightarrow \text{Bool}, x: \{z: \text{Bool}\}\}$,
+  
+  $\{y: \text{Bool} \rightarrow \text{Bool}, x: \{q: \text{Nat}\}\}$,
+  
+  $\{y: \text{Bool} \rightarrow \text{Bool}, x: \{z: \text{Bool}, q: \text{Nat}\}\}$,
+  
+  $\{y: \text{Bool} \rightarrow \text{Bool}, x: \{q: \text{Nat}, z: \text{Bool}\}\}$
+  
 \end{problem}
-
-\vspace{5cm}
 
 \begin{problem}{5 (2 points)}
   The subtyping rule for product types:
@@ -144,6 +209,14 @@
 
 \noindent for products. Explain in a couple of sentences why such a subtyping
   rule is or is not sound?
+  
+  This "permutation" rule is not sound. For instance, assume $T_1 \equiv \text{Nat}$ and $T_2 \equiv \text{Bool}$, $\text{Nat} * \text{Bool} <: \text{Bool} * \text{Nat}$ means any value of type $\text{Nat} * \text{Bool}$ must be usable in every way a $\text{Bool} * \text{Nat}$ is. However, this does not hold for all values. Consider the case that $v_1 = (1, \text{true})$ and $v_2 = (\text{true}, 1)$. $v_2$ is usable in
+  
+  \begin{center}
+    $\textbf{if} ~\text{fst}~ v_2 ~\textbf{then}~ \text{true} ~\textbf{else}~ \text{false}$
+  \end{center}
+  
+\noindent but $v_1$ is not.
 \end{problem}
 
 \end{document}
