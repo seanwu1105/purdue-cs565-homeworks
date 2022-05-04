@@ -1,5 +1,5 @@
-(*** CS 565 Final Exam ***)
 (** !!! Due date: 05/06/2022 by 6:00PM !!! **)
+(*** CS 565 Final Exam ***)
 
 (*****************************************************************
 
@@ -140,7 +140,7 @@ Module DenotationalSemantics.
   | AppearsInMinusL : forall (x : string) (a1 a2 : aexp),
       AppearsIn x a1 -> AppearsIn x (AMinus a1 a2)
   | AppearsInMinusR : forall (x : string) (a1 a2 : aexp),
-    AppearsIn x a2 -> AppearsIn x (AMinus a1 a2).
+      AppearsIn x a2 -> AppearsIn x (AMinus a1 a2).
 
   #[local] Hint Constructors AppearsIn : core.
 
@@ -148,8 +148,14 @@ Module DenotationalSemantics.
   (* Define another inductively defined proposition that captures when
      a variable does /not/ appear in an arithmetic expression: *)
   Inductive NotAppearsIn : string -> aexp -> Prop :=
-  (* FILL IN HERE *)
-  .
+  | NotAppearsInNum : forall x n, NotAppearsIn x (ANum n)
+  | NotAppearsInID : forall x y, x <> y -> NotAppearsIn x (AId y)
+  | NotAppearsInPlus : forall x a1 a2,
+      NotAppearsIn x a1 -> NotAppearsIn x a2 -> NotAppearsIn x (APlus a1 a2)
+  | NotAppearsInMult : forall x a1 a2,
+      NotAppearsIn x a1 -> NotAppearsIn x a2 -> NotAppearsIn x (AMult a1 a2)
+  | NotAppearsInMinus : forall x a1 a2,
+      NotAppearsIn x a1 -> NotAppearsIn x a2 -> NotAppearsIn x (AMinus a1 a2).
 
   (** Question 2 [Not_AppearsIn_impl_NotAppearsIn] (5 points) *)
   (* Show that when a variable [x] does not appear in an arithmetic
@@ -159,8 +165,14 @@ Module DenotationalSemantics.
   Lemma Not_AppearsIn_impl_NotAppearsIn : forall (x : string) (a : aexp),
       ~ AppearsIn x a -> NotAppearsIn x a.
   Proof.
-    (* FILL IN HERE *)
-  Admitted.
+    intros.
+    induction a.
+    - constructor.
+    - apply NotAppearsInID. intro. apply H. rewrite H0. eauto.
+    - apply NotAppearsInPlus; eauto.
+    - apply NotAppearsInMinus; eauto.
+    - apply NotAppearsInMult; eauto.
+  Qed.
 
   (* Denotational Semantics              (20 points) *)
   Import Fixpoints.
@@ -172,8 +184,8 @@ Module DenotationalSemantics.
   Theorem if_shift : forall b c1 c2 c3,
     <{ if b then c1 else c2 end; c3 }> ==C <{ if b then c1; c3 else c2; c3 end }>.
   Proof.
-    (* FILL IN HERE *)
-  Admitted.
+    split; intros (?, ?) ?; simpl in *; In_inversion; In_intro; eauto.
+  Qed.
 
   (* Question 4 [three_seq_equiv] (10 points) *)
   (* The fact that command equivalence is a true equivalence (i.e. a
@@ -189,14 +201,37 @@ Module DenotationalSemantics.
      Hint 2: The [seq_assoc] lemma in Denotational.v will also be
      useful here. *)
 
+  Theorem seq_assoc :
+    forall c1 c2 c3,
+      <{(c1; c2); c3}> ==C <{c1; (c2; c3)}>.
+  Proof.
+    split; intros (?, ?) ?; simpl in *; In_inversion; In_intro; eauto.
+  Qed.
+
   Theorem three_seq_equiv
     : forall (c1 c2 c3 c1' c2' c3' : com),
       <{c1; c2}> ==C <{c1'; c2'}> ->
       <{c2; c3}> ==C <{c2; c3'}> ->
       <{c1; c2; c3}> ==C <{c1'; c2'; c3'}>.
   Proof.
-    (* FILL IN HERE *)
-  Admitted.
+    split; intros (?, ?) ?.
+    - apply (seq_eq_cong c1) with (x:=(<{c2; c3'}>)) in H1.
+      apply seq_assoc in H1.
+      apply (seq_eq_cong <{c1'; c2'}>) with (x:=c3') in H1.
+    -- In_inversion. apply seq_assoc. In_intro. assumption.
+    -- symmetry. assumption.
+    -- reflexivity.
+    -- reflexivity.
+    -- symmetry. assumption.
+    - apply (seq_eq_cong c1) with (x:=(<{c2; c3'}>)).
+    -- reflexivity.
+    -- symmetry. assumption.
+    -- apply seq_assoc.
+       apply (seq_eq_cong <{c1'; c2'}>) with (x:=c3').
+    --- symmetry. assumption.
+    --- reflexivity.
+    --- In_intro. apply seq_assoc in H1. In_inversion. assumption.
+  Qed.
 
   (* If a variable does not appear in an expression assigned to it, it
      is safe to inline that variable in an assignment statement that
@@ -218,7 +253,22 @@ Module DenotationalSemantics.
       NotAppearsIn x a1 ->
       <{ x := a1; y := a2}> ==C <{ x := a1; y := subst_var x a1 a2}>.
   Proof.
-    (* FILL IN HERE, IF YOU SO CHOOSE. *)
+    intros.
+    split; intros (?, ?) ?.
+    - induction a2.
+    -- simpl in *. assumption.
+    -- simpl in *. destruct (x =? x0)%string eqn:eq.
+    --- apply eqb_eq in eq.
+        In_inversion; subst. In_intro.
+        eapply ex_intro.
+        split.
+    ---- eapply ex_intro. split; eauto.
+    ---- eapply ex_intro. split.
+    ----- induction H.
+    ------ eauto.
+    ------ simpl in *. eapply t_update_neq in H.
+           rewrite H. assumption.
+    ------ simpl in *.
   Admitted.
 
   (* Question 5 [three_subst_equiv] (5 points) *)
@@ -231,8 +281,25 @@ Module DenotationalSemantics.
       <{ x := a1; y := a2; z := a3}> ==C
       <{ x := a1; y := subst_var x a1 a2; z := subst_var y a2 a3 }>.
   Proof.
-    (* FILL IN HERE *)
-  Admitted.
+    split; intros (?, ?) ?.
+    - apply seq_assoc.
+      apply (seq_eq_cong <{ x := a1; y := a2 }>) with (x:=(<{ z := (subst_var y a2 a3) }>)).
+    -- apply subst_eqv. assumption.
+    -- reflexivity.
+    -- apply seq_assoc.
+       apply (seq_eq_cong <{ x := a1 }>) with (x:=(<{ y := a2; z := a3 }>)).
+    --- reflexivity.
+    --- apply subst_eqv. assumption.
+    --- assumption.
+    - apply (seq_eq_cong <{ x := a1 }>) with (x:=(<{ y := a2; z := (subst_var y a2 a3) }>)).
+    -- reflexivity.
+    -- symmetry. apply subst_eqv. assumption.
+    -- apply seq_assoc.
+       apply (seq_eq_cong <{ x := a1; y := (subst_var x a1 a2) }>) with (x:=(<{ z := (subst_var y a2 a3) }>)).
+    --- symmetry. apply subst_eqv. assumption.
+    --- reflexivity.
+    --- apply seq_assoc. assumption.
+  Qed.
 
 End DenotationalSemantics.
 
@@ -263,8 +330,15 @@ Module AxiomaticSemantics.
         W := Y * m}>
       {{Z <= W}}.
   Proof.
-    (* FILL IN HERE *)
-  Admitted.
+    intros.
+    apply hoare_seq with (Q := (Z <= Y * m)%assertion).
+    - eapply hoare_consequence_pre.
+    -- apply hoare_asgn.
+    -- assn_auto.
+    - eapply hoare_consequence_pre.
+    -- apply hoare_asgn.
+    -- unfold "->>". intros. apply mul_le_mono_r. assumption.
+  Qed.
 
   (* Question 7 [Hoare_Q2] (5 points) *)
   Lemma Hoare_Q2 :
@@ -273,8 +347,18 @@ Module AxiomaticSemantics.
       X := Y}>
     {{X <= 11 }}.
   Proof.
-    (* FILL IN HERE *)
-  Admitted.
+    apply hoare_seq with (Q := (Y <= 11)%assertion).
+    - eapply hoare_consequence_pre.
+    -- apply hoare_asgn.
+    -- assn_auto.
+    - apply hoare_if.
+    -- eapply hoare_consequence_pre.
+    --- apply hoare_asgn.
+    --- verify_assn.
+    -- eapply hoare_consequence_pre.
+    --- apply hoare_asgn.
+    --- assn_auto.
+  Qed.
 
   (* Question 8 [Hoare_Q3] (10 points) *)
   Example Hoare_Q3 :
@@ -285,8 +369,17 @@ Module AxiomaticSemantics.
                  Y := Y + 1 end }>
       {{X = m * n }}.
   Proof.
-    (* FILL IN HERE *)
-  Admitted.
+    intros.
+    eapply hoare_consequence with (P' := (X = m * Y)%assertion).
+    - eapply hoare_while.
+      eapply hoare_consequence_pre.
+    -- eapply hoare_seq.
+    --- apply hoare_asgn.
+    --- apply hoare_asgn.
+    -- verify_assn.
+    - verify_assn.
+    - verify_assn.
+  Qed.
 
 End AxiomaticSemantics.
 
@@ -326,7 +419,14 @@ Module TypeErasure.
      parsing errors when using those notations. *)
 
   Fixpoint erase (t : tm) : Utm :=
-    <<{true}>> (* REPLACE THIS LINE WITH YOUR DEFINITION *).
+    match t with
+    | tm_var x => Utm_var x
+    | <{t1 t2}> => Utm_app (erase t1) (erase t2)
+    | <{\y:T, t1}> => Utm_abs y (erase t1)
+    | <{true}> => <<{true}>>
+    | <{false}> => <<{false}>>
+    | <{if t1 then t2 else t3}> => Utm_ite (erase t1) (erase t2) (erase t3)
+    end.
 
   (* Question 11 [erase_value] (2 points)
 
@@ -336,8 +436,9 @@ Module TypeErasure.
   Lemma erase_value :
     forall v, value v -> Uvalue (erase v).
   Proof.
-    (* FILL IN HERE *)
-  Admitted.
+    intros.
+    induction H; constructor.
+  Qed.
 
   (* Question 12 [erase_subst] (3 points)
      Prove that erasure distributes over substitution: *)
@@ -346,8 +447,16 @@ Module TypeErasure.
     : forall x v t,
       Usubst x (erase v) (erase t) = erase (subst x v t).
   Proof.
-    (* FILL IN HERE *)
-  Admitted.
+    induction t; simpl.
+    - destruct (Maps.eqb_string x0 s); reflexivity.
+    - rewrite IHt1, IHt2. reflexivity.
+    - destruct (Maps.eqb_string x0 s).
+    -- reflexivity.
+    -- rewrite IHt. reflexivity.
+    - reflexivity.
+    - reflexivity.
+    - rewrite IHt1, IHt2, IHt3. reflexivity.
+  Qed.
 
   (* The type erasure function should preserve the semantics of any
    expression it's applied to. In other words: an erased lambda term should
@@ -368,11 +477,33 @@ Module TypeErasure.
   the untyped lambda calculus are [t -U-> t'] and [t -U->* t'],
   respectively. *)
 
-  Lemma erase_preserves_semantics :
-    True (* REPLACE THIS LINE WITH YOUR THEOREM STATEMENT *).
+  Lemma erase_preserves_semantics_single :
+    forall t t', t --> t' -> (erase t) -U-> (erase t').
   Proof.
-    (* FILL IN HERE *)
-  Admitted.
+    intros.
+    induction H; simpl.
+    - rewrite <- erase_subst.
+      apply STU_AppAbs.
+      apply erase_value in H.
+      assumption.
+    - apply STU_App1. assumption.
+    - apply STU_App2.
+    -- apply erase_value. assumption.
+    -- assumption.
+    - apply STU_IfTrue.
+    - apply STU_IfFalse.
+    - apply STU_If. assumption.
+  Qed.
+
+  Lemma erase_preserves_semantics :
+    forall t t', t -->* t' -> (erase t) -U->* (erase t').
+  Proof.
+    intros.
+    induction H.
+    - constructor.
+    - apply erase_preserves_semantics_single in H.
+      eapply Smallstep.multi_step; eassumption.
+  Qed.
 
 End TypeErasure.
 
@@ -508,7 +639,15 @@ Fixpoint subst (x : string) (s : tm) (t : tm) : tm :=
   | <{if t1 then t2 else t3}> =>
       <{if ([x:=s] t1) then ([x:=s] t2) else ([x:=s] t3)}>
   (* Options *)
-  (* REPLACE THIS LINE WITH YOUR DEFINITION *) | _ => t
+  | <{some t}> =>
+      <{some ([x:=s] t)}>
+  | <{none T}> =>
+      <{none T}>
+  | <{case t of | some y => t1 | none => t2}> =>
+      if eqb_string x y then
+        <{case ([x:=s] t) of | some y => t1 | none => ([x:=s] t2)}>
+      else
+        <{case ([x:=s] t) of | some y => ([x:=s] t1) | none => ([x:=s] t2)}>
   end
 
 where "'[' x ':=' s ']' t" := (subst x s t) (in custom stlc).
@@ -527,7 +666,8 @@ Inductive value : tm -> Prop :=
   | v_true : value <{true}>
   | v_false : value <{false}>
   (*Options*)
-  (* FILL IN HERE *).
+  | v_some : forall t, value t -> value <{some t}>
+  | v_none : forall T, value <{none T}>.
 
 #[local] Hint Constructors value : core.
 
@@ -576,7 +716,18 @@ Inductive step : tm -> tm -> Prop :=
       t1 --> t1' ->
       <{if t1 then t2 else t3}> --> <{if t1' then t2 else t3}>
   (* Options *)
-(* FILL IN HERE *)
+  | ST_Some : forall t1 t1',
+      t1 --> t1' ->
+      <{some t1}> --> <{some t1'}>
+  | ST_Case : forall t1 t1' t2 t3 y,
+      t1 --> t1' ->
+      <{case t1 of | some y => t2 | none => t3}>
+        --> <{case t1' of | some y => t2 | none => t3}>
+  | ST_CaseSome : forall t2 t3 y v1,
+      value v1 ->
+      <{case (some v1) of | some y => t2 | none => t3}> --> <{[y := v1] t2}>
+  | ST_CaseNone : forall t2 t3 y T,
+      <{case (none T) of | some y => t2 | none => t3}> --> t3
 
   where "t '-->' t'" := (step t t').
 
@@ -626,16 +777,25 @@ Inductive has_type : context -> tm -> ty -> Prop :=
       Gamma |- t1 t2 \in T1
   (* Booleans *)
   | T_True : forall Gamma,
-       Gamma |- true \in Bool
+      Gamma |- true \in Bool
   | T_False : forall Gamma,
-       Gamma |- false \in Bool
+      Gamma |- false \in Bool
   | T_If : forall t1 t2 t3 T1 Gamma,
-       Gamma |- t1 \in Bool ->
-       Gamma |- t2 \in T1 ->
-       Gamma |- t3 \in T1 ->
-       Gamma |- if t1 then t2 else t3 \in T1
+      Gamma |- t1 \in Bool ->
+      Gamma |- t2 \in T1 ->
+      Gamma |- t3 \in T1 ->
+      Gamma |- if t1 then t2 else t3 \in T1
   (* Options *)
-  (* FILL IN HERE *)
+  | T_Inl : forall Gamma t T,
+      Gamma |- t \in T ->
+      Gamma |- some t \in (Option T)
+  | T_Inr : forall Gamma T,
+      Gamma |- none T \in (Option T)
+  | T_Case : forall Gamma t0 t1 t2 x T T1,
+      Gamma |- t0 \in (Option T) ->
+      (x |-> T ; Gamma) |- t1 \in T1 ->
+      Gamma |- t2 \in T1 ->
+      Gamma |- case t0 of | some x => t1 | none => t2 \in T1
 
 where "Gamma '|-' t '\in' T" := (has_type Gamma t T).
 
@@ -674,8 +834,9 @@ Lemma canonical_forms_option : forall t T,
   value t ->
   t = <{none T}> \/ exists v, value v /\ t = <{some v}>.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  intros.
+  destruct H0; inversion H; eauto.
+Qed.
 
 (* ################################################################# *)
 (** * Progress *)
@@ -687,8 +848,27 @@ Theorem progress : forall t T,
   empty |- t \in T ->
   value t \/ exists t', t --> t'.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  intros.
+  remember empty as Gamma.
+  generalize dependent HeqGamma.
+  induction H; intros HeqGamma; subst; eauto.
+  - discriminate H.
+  - destruct IHhas_type1; eauto.
+  -- destruct IHhas_type2; eauto.
+  --- destruct H1; try solve_by_invert. eauto.
+  --- destruct H2; eauto.
+  -- destruct H1; eauto.
+  - destruct IHhas_type1; eauto.
+  -- destruct t1; try solve_by_invert; eauto.
+  -- destruct H2. eauto.
+  - destruct IHhas_type; eauto. destruct H0. eauto.
+  - destruct t0;
+    try solve_by_invert;
+    destruct IHhas_type1;
+    eauto;
+    inversion H2;
+    eauto.
+Qed.
 
 (* ################################################################# *)
 (** * Preservation *)
@@ -701,8 +881,7 @@ Proof.
   intros Gamma Gamma' t T H Ht.
   generalize dependent Gamma'.
   induction Ht; eauto using inclusion_update.
-  (* UNCOMMENT THIS LINE AFTER FINISHING [has_type]
-     intros; econstructor; eauto using inclusion_update. *)
+  intros; econstructor; eauto using inclusion_update.
 Qed.
 
 Lemma weakening_empty : forall Gamma t T,
@@ -721,8 +900,24 @@ Lemma substitution_preserves_typing : forall Gamma x U t v T,
   empty |- v \in U   ->
   Gamma |- [x:=v]t \in T.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  intros.
+  generalize dependent Gamma.
+  generalize dependent T.
+  induction t0; intros; inversion H; subst; simpl; eauto.
+  - destruct (eqb_stringP x s); subst.
+  -- rewrite update_eq in H3.
+     injection H3 as H3.
+     subst.
+     apply weakening_empty.
+     assumption.
+  -- apply T_Var. rewrite update_neq in H3; assumption.
+  - destruct (eqb_stringP x s); subst; apply T_Abs.
+  -- rewrite update_shadow in H6. assumption.
+  -- apply IHt0. rewrite update_permute; auto.
+  - destruct (eqb_stringP x s); subst; eapply T_Case; eauto.
+  -- rewrite update_shadow in H8. assumption.
+  -- apply IHt0_2. rewrite update_permute; auto.
+Qed.
 
 (* Question 22 [preservation] (5 points)
    Prove preservation for this calculus. *)
@@ -731,8 +926,12 @@ Theorem preservation : forall t t' T,
   t --> t'  ->
   empty |- t' \in T.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  intros t t' T HT. generalize dependent t'.
+    remember empty as Gamma.
+    induction HT; intros; subst; try solve [inversion H; subst; eauto];
+    inversion H; subst; eauto;
+    eapply substitution_preserves_typing; inversion HT1; eauto.
+Qed.
 
 Definition stuck (t:tm) : Prop :=
   (normal_form step) t /\ ~ value t.
@@ -744,7 +943,13 @@ Corollary soundness : forall t t' T,
   t -->* t' ->
   ~(stuck t').
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  unfold stuck, normal_form, not.
+    intros.
+    destruct H1.
+    induction H0.
+    - apply progress in H. destruct H; eauto.
+    - apply IHmulti; try eauto.
+    -- eapply preservation; eauto.
+Qed.
 
 End STLC_Extensions.
