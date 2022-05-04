@@ -125,6 +125,10 @@ jobs:
       - name: Compile dependencies
         run: ./build-dep.sh
 
+      - name: Build specified dependencies
+        working-directory: ./final/DenotationalSemantics
+        run: make
+
       - name: Test assignment
         working-directory: ./final/Final
         run: make
